@@ -1,5 +1,5 @@
-from messageBus import busClient
-from messageBus.busClient import Producer, Consumer
+from busClient import busClient
+from busClient import Producer, Consumer
 
 
 def main():
