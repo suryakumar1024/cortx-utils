@@ -1,6 +1,6 @@
 
-from messageBus import main as m
-from messageBus.main import Bus
+import main as m
+from main import Bus
 
 class busClient(object):
     def __init__(self, mq):

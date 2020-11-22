@@ -1,4 +1,4 @@
-from messageBus.adaptee import KafkaAdaptee
+from adaptee import KafkaAdaptee
 import logging
 
 log = logging.getLogger(__name__)
