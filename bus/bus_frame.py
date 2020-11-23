@@ -1,4 +1,4 @@
-from adaptee import KafkaAdaptee
+from adaptee.kafka_python_adaptor import KafkaAdaptee
 import logging
 
 log = logging.getLogger(__name__)
@@ -6,7 +6,7 @@ log = logging.getLogger(__name__)
 
 class Bus(object):
     def __init__(self, mq_client_name, config):
-        log.debug("Init Bus class")
+        log.debug("Init bus class")
         self.config = config
 
         if mq_client_name == 'kafka':
@@ -65,6 +65,6 @@ class Bus(object):
     def get_all_topics(self):
         return self.bus_consumer.topics()
 
-class Config(object):
-    def __init__(self):
-        self.bootstrap_servers = 'localhost:9092'
+# class Config(object):
+#     def __init__(self):
+#         self.bootstrap_servers = 'localhost:9092'

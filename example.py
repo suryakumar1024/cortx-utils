@@ -1,5 +1,6 @@
-from main import Bus
-from busClient import Producer, Consumer
+from bus.bus_frame import Bus
+from producer import Producer
+from consumer import Consumer
 
 
 def main():
