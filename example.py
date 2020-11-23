@@ -1,16 +1,17 @@
-from busClient import busClient
+from main import Bus
 from busClient import Producer, Consumer
 
 
 def main():
-    busStart = busClient('kafka')
-    prod_obj = Producer(busStart)
-    print(prod_obj.send('sampl', b"test message"))
-    cons_obj = Consumer(busStart)
-    print(cons_obj.receive(['sampl']))
+    bus_start = Bus('kafka', 'cfg')
+    prod_obj = Producer(bus_start)
+    print(prod_obj.send('testing', b"test message"))
+    cons_obj = Consumer(bus_start)
+    print(cons_obj.receive(['testing']))
 
 
 if __name__ == "__main__":
     main()
+
 
 
