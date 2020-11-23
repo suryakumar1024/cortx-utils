@@ -34,24 +34,27 @@ class KafkaAdaptee(Adaptee):
                          replication_factor=1)
         self.admin.create_topics([new_topic])
 
-    def send(self, topic, msg):
-        producer = KafkaProducer(bootstrap_servers='localhost:9092')
+    def send(self, producer, topic, msg):
         producer.send(topic, msg)
         producer.close()
 
-    def receive(self, topic):
-        consumer = KafkaConsumer(bootstrap_servers='localhost:9092',
-                                 auto_offset_reset='earliest',
-                                 consumer_timeout_ms=1000)
+    def receive(self, consumer, topic):
         consumer.subscribe(topic)
         for msg in consumer:
             print(msg)
 
-    def create_producer(self):
-        pass
+    def create(self, role):
+        if role == 'PRODUCER':
+            producer = KafkaProducer(bootstrap_servers='localhost:9092')
+            return producer
+        elif role == 'CONSUMER':
+            consumer = KafkaConsumer(bootstrap_servers='localhost:9092', auto_offset_reset='earliest', consumer_timeout_ms=1000)
+            return consumer
+        else:
+            print('pass')
+            pass
+            #assert(role)
 
-    def create_consumer(self):
-        pass
 
     def create_admin(self):
         pass
