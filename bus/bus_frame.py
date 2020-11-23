@@ -5,9 +5,10 @@ log = logging.getLogger(__name__)
 
 
 class Bus(object):
-    def __init__(self, mq_client_name, config):
+    def __init__(self, mq_client_name, config, bus_callback):
         log.debug("Init bus class")
         self.config = config
+        #self.bus_callback = bus_callback
 
         if mq_client_name == 'kafka':
             self.adaptor = KafkaAdaptee()
@@ -33,7 +34,8 @@ class Bus(object):
         # check MQ and it's configuration here
         return client_cls()
 
-    def create(self, role):
+    def create(self, role ):
+
         self.role = role
         return self.adaptor.create(self.role)
 
