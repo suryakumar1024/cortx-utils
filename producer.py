@@ -1,5 +1,5 @@
 import logging
-from client import BusClient
+from bus.client import BusClient
 
 log = logging.getLogger(__name__)
 
@@ -12,11 +12,13 @@ class Producer(BusClient):
         # self.producer = KafkaProducer(bootstrap_servers='localhost:9092')
         super().__init__(busHandle, 'PRODUCER')
 
-    def send(self, topic, message):
+    def send(self, topic=None, message=None):
         log.info("Bus send message")
         print("Bus send message")
-        # self.producer.send(topic, message)
-        # super(BusClient, self).send(topic, message)
         super().send(topic, message)
         log.info("Bus send message complete")
         print("Bus send message complete")
+
+    # Above implementation is enough
+    # def send(self, message):
+    #     pass

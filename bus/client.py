@@ -6,7 +6,7 @@ class BusClient(object):
         self.busHandle = busHandle
         self.bus_client = self.busHandle.create(self.role)
 
-    def send(self, topic, message):
+    def send(self, topic=None, message=None):
         self.busHandle.send(self.bus_client, topic, message)
 
     def receive(self, topic):
@@ -15,8 +15,8 @@ class BusClient(object):
     def create_producer(self):
         self.busHandle.create(self.role)
 
-    def create_topic(self):
-        pass
+    # def create_topic(self):
+    #     pass
 
     def delete_topic(self):
         pass

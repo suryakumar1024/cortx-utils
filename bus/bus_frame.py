@@ -1,15 +1,20 @@
 from adaptee.kafka_python_adaptor import KafkaAdaptee
-import logging
-# logging.basicConfig(filename='log_file.log', encoding='utf-8', level=logging.DEBUG)
-log = logging.getLogger(__name__)
+from topic_in_message import TopicInMessage
+from utils import log_decorator
+# import logging
+# # logging.basicConfig(filename='log_file.log', encoding='utf-8', level=logging.DEBUG)
+# log = logging.getLogger(__name__)
+
 
 class Bus(object):
+    @log_decorator
     def __init__(self, mq_client_name, config):
-        log.debug("Init bus class")
+        # log.debug("Init bus class")
         self.config = config
 
         if mq_client_name == 'kafka':
             self.adaptor = KafkaAdaptee()
+            # self.schema = TopicInMessage()
         else:
             self.adaptor = KafkaAdaptee()
         self.client_list = []
@@ -34,15 +39,24 @@ class Bus(object):
 
     def create(self, role):
         self.role = role
-        return self.adaptor.create(self.role)
+        obj = self.adaptor.create(self.role)
+        return obj
 
+    @log_decorator
     def send(self, producer, topic, message):
         # check for topic existence
-        log.debug(f"Message '{message}' sending to topic -> {topic} in-progress")
+        if topic is None:
+            # topic = self.schema.get_topic()
+            topic = 'Alert'
+        # log.debug(f"Message '{message}' sending to topic -> {topic} in-progress")
         print(f"Message '{message}' sending to topic -> {topic} in-progress")
         self.adaptor.send(producer, topic, message)
         print(f"Message '{message}' sent to topic -> {topic} in-progress")
-        log.debug(f"Message '{message}' sending to topic -> {topic} complete")
+        # log.debug(f"Message '{message}' sending to topic -> {topic} complete")
+
+    # Above implementation is enough
+    # def send(self, message):
+    #     topic = self.schema.get_topic()
 
     def receive(self, consumer, topic):
         return self.adaptor.receive(consumer, topic)
@@ -54,12 +68,18 @@ class Bus(object):
 
     def unsubscribe(self):
         pass
-    def new_topic(self):
-        pass
+
+    def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
+        # do pre-create callbacks
+        self.adaptor.create_topics(topic_name, timeout_ms, validate_only)
+        # do post create callbacks
+
     def configure(self):
         pass
+
     def fetch(self):
         pass
+
     def get_all_topics(self):
         return self.bus_consumer.topics()
 

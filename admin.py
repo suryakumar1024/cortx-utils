@@ -1,4 +1,4 @@
-from client import BusClient
+from bus.client import BusClient
 
 class Admin(BusClient):
 
