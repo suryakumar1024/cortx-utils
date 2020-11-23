@@ -1,6 +1,6 @@
-from client import busClient
+from client import BusClient
 
-class Consumer(busClient):
+class Consumer(BusClient):
 
     def __init__(self, busHandle):
         super().__init__(busHandle, 'CONSUMER')
@@ -9,4 +9,4 @@ class Consumer(busClient):
         pass
 
     def receive(self, topic):
-        super().receive(topic)
+        return super().receive(topic)

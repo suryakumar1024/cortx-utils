@@ -1,6 +1,6 @@
 
 
-class busClient(object):
+class BusClient(object):
     def __init__(self, busHandle, role):
         self.role = role
         self.busHandle = busHandle
@@ -10,7 +10,7 @@ class busClient(object):
         self.busHandle.send(self.bus_client, topic, message)
 
     def receive(self, topic):
-        self.busHandle.receive(self.bus_client, topic)
+        return self.busHandle.receive(self.bus_client, topic)
 
     def create_producer(self):
         self.busHandle.create(self.role)

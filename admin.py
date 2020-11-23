@@ -1,6 +1,6 @@
-from client import busClient
+from client import BusClient
 
-class Admin(busClient):
+class Admin(BusClient):
 
     def __init__(self):
         pass

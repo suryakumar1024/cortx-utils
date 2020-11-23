@@ -19,13 +19,13 @@ class KafkaAdaptee(Adaptee):
 
     def send(self, producer, topic, msg):
         producer.send(topic, msg)
-        producer.close()
 
     def receive(self, consumer, topic):
         consumer.subscribe(topic)
-        for msg in consumer:
-            print(msg)
+        return consumer
 
+    # def closeChannel(self):
+    #     producer.close()
     def create(self, role):
         if role == 'PRODUCER':
             producer = KafkaProducer(bootstrap_servers='localhost:9092')
@@ -37,7 +37,6 @@ class KafkaAdaptee(Adaptee):
             print('pass')
             pass
             #assert(role)
-
 
     def create_admin(self):
         pass

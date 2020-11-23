@@ -1,8 +1,7 @@
 from adaptee.kafka_python_adaptor import KafkaAdaptee
 import logging
-
+# logging.basicConfig(filename='log_file.log', encoding='utf-8', level=logging.DEBUG)
 log = logging.getLogger(__name__)
-
 
 class Bus(object):
     def __init__(self, mq_client_name, config):
@@ -46,13 +45,12 @@ class Bus(object):
         log.debug(f"Message '{message}' sending to topic -> {topic} complete")
 
     def receive(self, consumer, topic):
-        self.adaptor.receive(consumer, topic)
+        return self.adaptor.receive(consumer, topic)
 
-
-    def subscribe(self,topics,pattern=None,listener=None):
-        log.info("Listening to topic" + " ".join(topics))
-        print("Listening to topic" + " ".join(topics))
-        self.bus_consumer.subscribe(topics, pattern, listener)
+    # def subscribe(self,topics,pattern=None,listener=None):
+    #     log.info("Listening to topic" + " ".join(topics))
+    #     print("Listening to topic" + " ".join(topics))
+    #     self.bus_consumer.subscribe(topics, pattern, listener)
 
     def unsubscribe(self):
         pass

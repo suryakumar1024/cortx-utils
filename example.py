@@ -6,9 +6,12 @@ from consumer import Consumer
 def main():
     bus_start = Bus('kafka', 'cfg')
     prod_obj = Producer(bus_start)
-    print(prod_obj.send('testing', b"test message"))
+    for i in range(10):
+        prod_obj.send("testing", b"test message")
     cons_obj = Consumer(bus_start)
-    print(cons_obj.receive(['testing']))
+    che = cons_obj.receive(['testing'])
+    for each in cons_obj.receive(['testing']):
+        print(each)
 
 
 if __name__ == "__main__":
