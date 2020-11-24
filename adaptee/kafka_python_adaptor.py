@@ -3,7 +3,6 @@ import logging
 from kafka import KafkaAdminClient, KafkaProducer, KafkaConsumer
 from kafka.admin import NewTopic
 from adaptee.adaptee import Adaptee
-from bus.topic_schema import TopicSchema
 
 from utils import log_decorator
 
@@ -13,19 +12,12 @@ class KafkaAdaptee(Adaptee):
     def __init__(self):
         try:
             self.admin = KafkaAdminClient(bootstrap_servers='localhost:9092')
-            self.schema = TopicSchema()
         except Exception as e:
             print(e)
 
     @log_decorator
-    def send(self, producer, message):
-        topic = self.schema.get_topic(message, producer)
-        all_topic_list = self.get_all_topics()
-        if topic in all_topic_list:
-            producer.send(topic, bytes(message.payload, 'utf-8'))
-        else:
-            # logging.debug("Topic not exist. Create the topic before sending")
-            raise KeyError("Topic not exist. Create the topic before sending")
+    def send(self, producer, topic, message):
+        producer.send(topic, message)
 
     def receive(self, consumer, topic):
         consumer.subscribe(topic)

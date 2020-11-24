@@ -20,6 +20,7 @@ class Bus(object):
             self.adaptor = KafkaAdaptee()
         else:
             self.adaptor = KafkaAdaptee()
+        self.schema = TopicSchema()
         self.client_list = []
 
     def __load_topic(self, config):
@@ -57,7 +58,15 @@ class Bus(object):
     @log_decorator
     def send(self, producer, message):
         print(f"Message '{message.payload}' sending to topic -> in-progress")
-        self.adaptor.send(producer, message)
+        topic = self.schema.get_topic(message, producer)
+        all_topic_list = self.get_all_topics()
+        if topic in all_topic_list:
+            self.adaptor.send(producer, topic, bytes(message.payload, 'utf-8'))
+        else:
+            # logging.debug("Topic not exist. Create the topic before sending")
+            raise KeyError("Topic not exist. Create the topic before sending")
+
+
 
     def get_topic(self, client, message):
         return self.schema.get_topic(client, message)
