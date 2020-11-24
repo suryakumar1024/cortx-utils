@@ -10,13 +10,13 @@ class Adaptee(object):
     def receive(self):
         pass
 
-    def create_producer(self):
+    def create(self):
         pass
 
-    def create_consumer(self):
+    def subscribe(self):
         pass
 
-    def create_admin(self):
+    def unsubscribe(self):
         pass
 
 

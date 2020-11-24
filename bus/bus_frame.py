@@ -1,21 +1,39 @@
 from adaptee.kafka_python_adaptor import KafkaAdaptee
-import logging
 
+import logging
 log = logging.getLogger(__name__)
+
+from bus.topic_schema import TopicSchema
+from utils import log_decorator
 
 
 class Bus(object):
-    def __init__(self, mq_client_name, config, bus_callback):
-        log.debug("Init bus class")
-        self.config = config
-        #self.bus_callback = bus_callback
 
+    @log_decorator
+    def __init__(self, mq_client_name, config, bus_callback = None):
+        # log.debug("Init bus class")
+        self.config = config
+        self.mq_client_name = mq_client_name
+        self.bus_callback = bus_callback
+        # Do configurations here
+        # __load_topics(self.config)
+        # __load_adaptor(self.config)
         if mq_client_name == 'kafka':
             self.adaptor = KafkaAdaptee()
         else:
             self.adaptor = KafkaAdaptee()
+        self.schema = TopicSchema()
         self.client_list = []
 
+    def __load_topic(self, config):
+        # {bus:"kafka", topics:[{name:"Alert", replication_factor:3, policy:"Remove_on_ACK"}], }
+        # will get the schema from config file . convert the string in config.schema
+        # to TopicInMessage using factory patter
+        self.schema = TopicSchema()
+
+        for t in config.topics:
+            topic = Topic(t)
+            self.schema.set_topics(topic.name, topic)
 
     def register_client(self, cls):
         self.client_list.push(cls)
@@ -37,36 +55,56 @@ class Bus(object):
     def create(self, role ):
 
         self.role = role
-        return self.adaptor.create(self.role)
+        return self.adaptor.create(self.role, self.config)
 
-    def send(self, producer, topic, message):
-        # check for topic existence
-        log.debug(f"Message '{message}' sending to topic -> {topic} in-progress")
-        print(f"Message '{message}' sending to topic -> {topic} in-progress")
-        self.adaptor.send(producer, topic, message)
-        print(f"Message '{message}' sent to topic -> {topic} in-progress")
-        log.debug(f"Message '{message}' sending to topic -> {topic} complete")
+    @log_decorator
+    def send(self, producer, message):
+        topic = self.schema.get_topic(message, producer)
+        if self.bus_callback is not None:
+            self.bus_callback.pre_send(producer, topic, message)
+        print(f"Message '{message.payload}' sending to topic -> in-progress")
+        all_topic_list = self.get_all_topics()
+        if topic in all_topic_list:
+            self.adaptor.send(producer, topic, bytes(message.payload, 'utf-8'))
+        else:
+            # logging.debug("Topic not exist. Create the topic before sending")
+            raise KeyError("Topic not exist. Create the topic before sending")
+        # Will post send consider exception too
+        if self.bus_callback is not None:
+            self.bus_callback.post_send(producer, topic, message)
 
-    def receive(self, consumer, topic):
-        self.adaptor.receive(consumer, topic)
 
 
-    def subscribe(self,topics,pattern=None,listener=None):
-        log.info("Listening to topic" + " ".join(topics))
-        print("Listening to topic" + " ".join(topics))
-        self.bus_consumer.subscribe(topics, pattern, listener)
+    def get_topic(self, client, message):
+        return self.schema.get_topic(client, message)
 
-    def unsubscribe(self):
-        pass
-    def new_topic(self):
-        pass
+    def receive(self, consumer):
+        if self.bus_callback is not None:
+            self.bus_callback.pre_receive(consumer)
+        consumer_obj = self.adaptor.receive(consumer)
+        if self.bus_callback is not None:
+            self.bus_callback.pre_receive(consumer)
+        return consumer_obj
+
+    def subscribe(self, consumer, topic, pattern=None, listener=None):
+        log.info("Listening to topic " + " ".join(topic))
+        print("Listening to topic " + " ".join(topic))
+        return self.adaptor.subscribe(consumer, topic)
+
+    def unsubscribe(self, subscription):
+        return self.adaptor.unsubscribe(subscription)
+
+    def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
+        # do pre-create callbacks
+        self.adaptor.create_topics(topic_name, timeout_ms, validate_only)
+        # do post create callbacks
+
     def configure(self):
         pass
+
     def fetch(self):
         pass
-    def get_all_topics(self):
-        return self.bus_consumer.topics()
 
-# class Config(object):
-#     def __init__(self):
-#         self.bootstrap_servers = 'localhost:9092'
+    def get_all_topics(self):
+        return self.adaptor.get_all_topics()
+
