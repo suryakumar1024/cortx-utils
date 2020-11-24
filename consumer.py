@@ -1,3 +1,4 @@
+
 from bus.client import BusClient
 
 class Consumer(BusClient):
@@ -8,5 +9,11 @@ class Consumer(BusClient):
     def send(self):
         pass
 
-    def receive(self, topic):
-        return super().receive(topic)
+    def subscribe(self, topic):
+        return super().subscribe(topic)
+
+    def unsubscribe(self, subscription):
+        return super().unsubscribe(subscription)
+
+    def receive(self, consumer):
+        return super().receive(consumer)

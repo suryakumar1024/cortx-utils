@@ -9,17 +9,14 @@ class BusClient(object):
     def send(self, message=None):
         self.busHandle.send(self.bus_client, message)
 
-    def receive(self, topic):
-        return self.busHandle.receive(self.bus_client, topic)
+    def receive(self, consumer):
+        return self.busHandle.receive(consumer)
 
-    def create_producer(self):
+    def create(self):
         self.busHandle.create(self.role)
 
-    # def create_topic(self):
-    #     pass
-
-    def delete_topic(self):
-        pass
-
-    def list_topic(self):
-        pass
+    def subscribe(self, topic):
+        return self.busHandle.subscribe(self.bus_client, topic)
+    
+    def unsubscribe(self, subscription):
+        return self.busHandle.unsubscribe(subscription)

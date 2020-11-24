@@ -1,6 +1,8 @@
 from bus.bus_frame import Bus
+from bus.callback import MyCallback
 from producer import Producer
 from consumer import Consumer
+from config import Config
 from bus.topic import Topic
 from message import Message
 
@@ -8,25 +10,29 @@ from utils import log_decorator
 
 @log_decorator
 def main():
-    bus_obj = Bus('kafka', 'cfg')
-    # Producer
-    prod_obj = Producer(bus_obj)
-    # topic_obj = Topic(bus_obj)
-    # topic_obj.create('new-topic')
-    # print(topic_obj.get_all_topics())
-    # msg_obj = Message({host:"127.127.0.0", module:"sspl", msg: 'this is message body', type:alert}, "Default",
-    # "json")
+    config = Config()
+    bus_start = Bus('kafka', Config)
+    prod_obj = Producer(bus_start)
+    print('*' * 45)
+    print('Sending messages . . .')
     msg_obj = Message("This is message", "Default","json")
-    #
-    for i in range(10):
+    for i in range(2):
         prod_obj.send(msg_obj)
-
-    # Consumer
-    cons_obj = Consumer(bus_obj)
-    cons_msg = cons_obj.receive(['Default'])
-    for each in cons_msg:
+    cons_obj = Consumer(bus_start)
+    print('Subscribing messages . . .')
+    subscription = cons_obj.subscribe(['Default'])
+    msg1 = cons_obj.receive(subscription)
+    print('*'*45)
+    print('Receiving messages 1 . . .')
+    for each in msg1:
         print(each)
-
+    print('*' * 45)
+    print('Unsubscribing messages . . .')
+    unsubscription = cons_obj.unsubscribe(subscription)
+    msg2 = cons_obj.receive(unsubscription)
+    print('Receiving messages 2 . . .')
+    for each in msg2:
+        print(each)
 
 if __name__ == "__main__":
     main()
