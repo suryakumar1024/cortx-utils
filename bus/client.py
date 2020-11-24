@@ -6,8 +6,8 @@ class BusClient(object):
         self.busHandle = busHandle
         self.bus_client = self.busHandle.create(self.role)
 
-    def send(self, topic=None, message=None):
-        self.busHandle.send(self.bus_client, topic, message)
+    def send(self, message=None):
+        self.busHandle.send(self.bus_client, message)
 
     def receive(self, topic):
         return self.busHandle.receive(self.bus_client, topic)

@@ -12,3 +12,12 @@ class Topic(object):
     @log_decorator
     def create(self, topic_name, timeout_ms=None, validate_only=False):
         return self.bus_handle.create_topic(topic_name, timeout_ms, validate_only)
+
+    def get_topic(self,message):
+        return self.bus_handle.get_topic(message)
+
+    def get_all_topics(self):
+        return self.bus_handle.get_all_topics()
+    # CURD
+    # replication
+    # Update policy

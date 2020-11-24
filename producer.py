@@ -12,10 +12,10 @@ class Producer(BusClient):
         # self.producer = KafkaProducer(bootstrap_servers='localhost:9092')
         super().__init__(busHandle, 'PRODUCER')
 
-    def send(self, topic=None, message=None):
+    def send(self, message):
         log.info("Bus send message")
         print("Bus send message")
-        super().send(topic, message)
+        super().send(message)
         log.info("Bus send message complete")
         print("Bus send message complete")
 

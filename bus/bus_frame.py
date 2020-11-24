@@ -1,5 +1,5 @@
 from adaptee.kafka_python_adaptor import KafkaAdaptee
-from topic_in_message import TopicInMessage
+from bus.topic_schema import TopicSchema
 from utils import log_decorator
 # import logging
 # # logging.basicConfig(filename='log_file.log', encoding='utf-8', level=logging.DEBUG)
@@ -7,18 +7,30 @@ from utils import log_decorator
 
 
 class Bus(object):
+
     @log_decorator
     def __init__(self, mq_client_name, config):
         # log.debug("Init bus class")
         self.config = config
-
+        self.mq_client_name = mq_client_name
+        # Do configurations here
+        # __load_topics(self.config)
+        # __load_adaptor(self.config)
         if mq_client_name == 'kafka':
             self.adaptor = KafkaAdaptee()
-            # self.schema = TopicInMessage()
         else:
             self.adaptor = KafkaAdaptee()
         self.client_list = []
 
+    def __load_topic(self, config):
+        # {bus:"kafka", topics:[{name:"Alert", replication_factor:3, policy:"Remove_on_ACK"}], }
+        # will get the schema from config file . convert the string in config.schema
+        # to TopicInMessage using factory patter
+        self.schema = TopicSchema()
+
+        for t in config.topics:
+            topic = Topic(t)
+            self.schema.set_topics(topic.name, topic)
 
     def register_client(self, cls):
         self.client_list.push(cls)
@@ -43,21 +55,12 @@ class Bus(object):
         return obj
 
     @log_decorator
-    def send(self, producer, topic, message):
-        # check for topic existence
-        if topic is None:
-            # topic = self.schema.get_topic()
-            topic = 'Alert'
-        # log.debug(f"Message '{message}' sending to topic -> {topic} in-progress")
-        print(f"Message '{message}' sending to topic -> {topic} in-progress")
-        self.adaptor.send(producer, topic, message)
-        print(f"Message '{message}' sent to topic -> {topic} in-progress")
-        # log.debug(f"Message '{message}' sending to topic -> {topic} complete")
+    def send(self, producer, message):
+        print(f"Message '{message.payload}' sending to topic -> in-progress")
+        self.adaptor.send(producer, message)
 
-    # Above implementation is enough
-    # def send(self, message):
-    #     topic = self.schema.get_topic()
-
+    def get_topic(self, client, message):
+        return self.schema.get_topic(client, message)
     def receive(self, consumer, topic):
         return self.adaptor.receive(consumer, topic)
 
@@ -81,7 +84,7 @@ class Bus(object):
         pass
 
     def get_all_topics(self):
-        return self.bus_consumer.topics()
+        return self.adaptor.get_all_topics()
 
 # class Config(object):
 #     def __init__(self):
