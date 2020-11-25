@@ -9,8 +9,10 @@ from utils import log_decorator
 
 class KafkaAdaptee(Adaptee):
 
-    def __init__(self):
+    def __init__(self, config):
         try:
+            self.config = config
+            print(self.config)
             self.admin = KafkaAdminClient(bootstrap_servers='localhost:9092')
             self.mapper = {}
         except Exception as e:
@@ -47,15 +49,14 @@ class KafkaAdaptee(Adaptee):
     # def closeChannel(self):
     #     producer.close()
     # @log_decorator
-    def create(self, role, config):
-        # #for k,v in config:
-        #     if v is not None:
-        #         config[k] = v
+    def create(self, role):
         if role == 'PRODUCER':
-            producer = KafkaProducer(bootstrap_servers='localhost:9092')
+            config = self.config['producer'][0]
+            producer = KafkaProducer(**config)
             return producer
         elif role == 'CONSUMER':
-            consumer = KafkaConsumer(bootstrap_servers='localhost:9092', auto_offset_reset='earliest', consumer_timeout_ms=1000)
+            config = self.config['consumer'][0]
+            consumer = KafkaConsumer(**config)
             return consumer
         else:
             print('pass')

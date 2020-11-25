@@ -12,16 +12,16 @@ from utils import log_decorator
 def main():
 
     config = Config()
-    bus_start = Bus('kafka', Config)
+    bus_start = Bus('kafka')
     prod_obj = Producer(bus_start)
     print('*' * 45)
     print('Sending messages . . .')
-    msg_obj = Message("This is message", "Default","json")
+    msg_obj = Message("This is message", "testing","json")
     for i in range(2):
         prod_obj.send(msg_obj)
     cons_obj = Consumer(bus_start)
     print('Subscribing messages . . .')
-    subscription = cons_obj.subscribe(['Default'])
+    subscription = cons_obj.subscribe(['testing'])
     msg1 = cons_obj.receive(subscription)
     print('*'*45)
     print('Receiving messages 1 . . .')

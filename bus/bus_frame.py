@@ -1,39 +1,45 @@
 from adaptee.kafka_python_adaptor import KafkaAdaptee
-
+from config import KafkaConfig
 import logging
 log = logging.getLogger(__name__)
 
 from bus.topic_schema import TopicSchema
+from bus.topic import Topic
 from utils import log_decorator
 
 
 class Bus(object):
 
     @log_decorator
-    def __init__(self, mq_client_name, config, bus_callback = None):
+    def __init__(self, mq_bus_name, bus_callback = None):
         # log.debug("Init bus class")
-        self.config = config
-        self.mq_client_name = mq_client_name
+        self.config = None
+        self.mq_bus_name = mq_bus_name
         self.bus_callback = bus_callback
         # Do configurations here
-        # __load_topics(self.config)
-        # __load_adaptor(self.config)
-        if mq_client_name == 'kafka':
-            self.adaptor = KafkaAdaptee()
-        else:
-            self.adaptor = KafkaAdaptee()
+        self.__load_adaptor(mq_bus_name)
+        if self.config is not None:
+            self.__load_topic()
+
         self.schema = TopicSchema()
         self.client_list = []
+    def __load_adaptor(self, mq_bus_name):
+        if mq_bus_name == 'kafka':
+            self.config_obj = KafkaConfig()
+            self.config = self.config_obj.get_config()
+            self.adaptor = KafkaAdaptee(self.config)
+        else:
+            self.adaptor = KafkaAdaptee(self.config)
 
-    def __load_topic(self, config):
+    def __load_topic(self):
         # {bus:"kafka", topics:[{name:"Alert", replication_factor:3, policy:"Remove_on_ACK"}], }
         # will get the schema from config file . convert the string in config.schema
         # to TopicInMessage using factory patter
         self.schema = TopicSchema()
-
-        for t in config.topics:
+        for t in self.config['topics']:
             topic = Topic(t)
-            self.schema.set_topics(topic.name, topic)
+            print('*'*10, topic.name)
+            self.schema.set_topic(topic.name, topic)
 
     def register_client(self, cls):
         self.client_list.push(cls)
@@ -52,10 +58,9 @@ class Bus(object):
         # check MQ and it's configuration here
         return client_cls()
 
-    def create(self, role ):
-
+    def create(self, role):
         self.role = role
-        return self.adaptor.create(self.role, self.config)
+        return self.adaptor.create(self.role)
 
     @log_decorator
     def send(self, producer, message):
@@ -65,6 +70,7 @@ class Bus(object):
         print(f"Message '{message.payload}' sending to topic -> in-progress")
         all_topic_list = self.get_all_topics()
         if topic in all_topic_list:
+        #if True:
             self.adaptor.send(producer, topic, bytes(message.payload, 'utf-8'))
         else:
             # logging.debug("Topic not exist. Create the topic before sending")
@@ -106,5 +112,6 @@ class Bus(object):
         pass
 
     def get_all_topics(self):
+        print('inside bus get topic')
         return self.adaptor.get_all_topics()
 
