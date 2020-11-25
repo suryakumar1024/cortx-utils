@@ -25,8 +25,8 @@ class Bus(object):
         self.client_list = []
     def __load_adaptor(self, mq_bus_name):
         if mq_bus_name == 'kafka':
-            self.config_obj = KafkaConfig()
-            self.config = self.config_obj.get_config()
+            # self.config_obj = KafkaConfig()
+            self.config = KafkaConfig().get_config()
             self.adaptor = KafkaAdaptee(self.config)
         else:
             self.adaptor = KafkaAdaptee(self.config)
@@ -60,7 +60,12 @@ class Bus(object):
 
     def create(self, role):
         self.role = role
-        return self.adaptor.create(self.role)
+        if self.bus_callback is not None:
+            self.precreate_busclient(self, role)
+        create_busclient = self.adaptor.create(self.role)
+        if self.bus_callback is not None:
+            self.postcreate_busclient(self, role)
+        return create_busclient
 
     @log_decorator
     def send(self, producer, message):
@@ -89,21 +94,28 @@ class Bus(object):
             self.bus_callback.pre_receive(consumer)
         consumer_obj = self.adaptor.receive(consumer)
         if self.bus_callback is not None:
-            self.bus_callback.pre_receive(consumer)
+            self.bus_callback.post_receive(consumer)
         return consumer_obj
 
     def subscribe(self, consumer, topic, pattern=None, listener=None):
+        if self.bus_callback is not None:
+            self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
         log.info("Listening to topic " + " ".join(topic))
         print("Listening to topic " + " ".join(topic))
-        return self.adaptor.subscribe(consumer, topic)
+        subscribe_obj =  self.adaptor.subscribe(consumer, topic)
+        if self.bus_callback is not None:
+            self.bus_callback.post_subscribe(self, consumer, topic, pattern=None, listener=None)
+        return subscribe_obj
 
     def unsubscribe(self, subscription):
         return self.adaptor.unsubscribe(subscription)
 
     def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
-        # do pre-create callbacks
+        if self.bus_callback is not None:
+            self.bus_callback.precreate_topic(self,topic_name, timeout_ms=None, validate_only=False)
         self.adaptor.create_topics(topic_name, timeout_ms, validate_only)
-        # do post create callbacks
+        if self.bus_callback is not None:
+            self.bus_callback.postcreate_topic(self,topic_name, timeout_ms=None, validate_only=False)
 
     def configure(self):
         pass

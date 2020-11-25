@@ -34,15 +34,14 @@ class KafkaAdaptee(Adaptee):
         else:
             return 'No Subscription'
 
-    def subscribe(self, consumer, topic=None, listener=None):
-        
-        #self.mapper[consumer][topic] = listener
-        
+    def subscribe(self, consumer, topic=None, listener='listen'):
+        self.mapper[consumer][topic] = listener
         consumer.subscribe(topic)
         #add listner
         return consumer
         
     def unsubscribe(self,consumer):
+        self.mapper = {}
         consumer.unsubscribe()
         return consumer
 
