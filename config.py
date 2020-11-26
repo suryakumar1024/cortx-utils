@@ -12,6 +12,7 @@ class KafkaConfig(Config):
         self.config = {
             'bus': "kafka",
             'topics': [{'name': "Alert", 'replication_factor': 3, 'policy': "Remove_on_ACK"}],
+            'client': [{'bootstrap_servers': 'localhost:9092'}],
             'producer': [{'bootstrap_servers': 'localhost:9092'}],
             'consumer': [{'bootstrap_servers': 'localhost:9092', 'auto_offset_reset': 'earliest', 'consumer_timeout_ms': 1000}]
         }

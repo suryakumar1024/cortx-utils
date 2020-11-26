@@ -2,13 +2,13 @@ from adaptee.kafka_python_adaptor import KafkaAdaptee
 from config import KafkaConfig
 import logging
 log = logging.getLogger(__name__)
-
+from template.singleton import Singleton
 from bus.topic_schema import TopicSchema
 from bus.topic import Topic
 from utils import log_decorator
 
 
-class Bus(object):
+class Bus(metaclass=Singleton):
 
     @log_decorator
     def __init__(self, mq_bus_name, bus_callback = None):
@@ -23,11 +23,12 @@ class Bus(object):
 
         self.schema = TopicSchema()
         self.client_list = []
+        
     def __load_adaptor(self, mq_bus_name):
         if mq_bus_name == 'kafka':
-            # self.config_obj = KafkaConfig()
             self.config = KafkaConfig().get_config()
             self.adaptor = KafkaAdaptee(self.config)
+            self.admin = self.adaptor.create_admin()
         else:
             self.adaptor = KafkaAdaptee(self.config)
 
@@ -100,7 +101,6 @@ class Bus(object):
     def subscribe(self, consumer, topic, pattern=None, listener=None):
         if self.bus_callback is not None:
             self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
-        log.info("Listening to topic " + " ".join(topic))
         print("Listening to topic " + " ".join(topic))
         subscribe_obj =  self.adaptor.subscribe(consumer, topic)
         if self.bus_callback is not None:

@@ -12,11 +12,14 @@ class KafkaAdaptee(Adaptee):
     def __init__(self, config):
         try:
             self.config = config
-            print(self.config)
-            self.admin = KafkaAdminClient(bootstrap_servers='localhost:9092')
             self.mapper = {}
         except Exception as e:
             print(e)
+
+    def create_admin(self):
+        config = self.config['client'][0]
+        self.admin = KafkaAdminClient(**config)
+        return self.admin
 
     def create_topic(self, topic):
         new_topic = NewTopic(name=topic,
@@ -35,13 +38,15 @@ class KafkaAdaptee(Adaptee):
             return 'No Subscription'
 
     def subscribe(self, consumer, topic=None, listener='listen'):
-        self.mapper[consumer][topic] = listener
+        self.mapper[consumer] = topic
         consumer.subscribe(topic)
-        #add listner
         return consumer
         
     def unsubscribe(self,consumer):
-        self.mapper = {}
+        print('mapper' , self.mapper)
+        if consumer:
+            del self.mapper[consumer]
+        print('mapper', self.mapper)
         consumer.unsubscribe()
         return consumer
 
@@ -62,8 +67,6 @@ class KafkaAdaptee(Adaptee):
             pass
             #assert(role)
 
-    def create_admin(self):
-        pass
 
     @log_decorator
     def create_topics(self, new_topics, timeout_ms=None, validate_only=False):
