@@ -12,7 +12,6 @@ class KafkaAdaptee(Adaptee):
     def __init__(self, config):
         try:
             self.config = config
-            self.mapper = {}
         except Exception as e:
             print(e)
 
@@ -38,15 +37,10 @@ class KafkaAdaptee(Adaptee):
             return 'No Subscription'
 
     def subscribe(self, consumer, topic=None, listener='listen'):
-        self.mapper[consumer] = topic
         consumer.subscribe(topic)
         return consumer
         
     def unsubscribe(self,consumer):
-        print('mapper' , self.mapper)
-        if consumer:
-            del self.mapper[consumer]
-        print('mapper', self.mapper)
         consumer.unsubscribe()
         return consumer
 

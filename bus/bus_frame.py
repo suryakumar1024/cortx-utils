@@ -14,6 +14,9 @@ class Bus(metaclass=Singleton):
     def __init__(self, mq_bus_name, bus_callback = None):
         # log.debug("Init bus class")
         self.config = None
+        self.notifier = None #notifier callable
+        self.mapper = {}
+        self.callables = {}
         self.mq_bus_name = mq_bus_name
         self.bus_callback = bus_callback
         # Do configurations here
@@ -86,29 +89,36 @@ class Bus(metaclass=Singleton):
             self.bus_callback.post_send(producer, topic, message)
 
 
-
     def get_topic(self, client, message):
         return self.schema.get_topic(client, message)
 
-    def receive(self, consumer):
+    def receive(self, consumer ):
+        #print('bus subscribeee....', self.notifier.get_caller())
         if self.bus_callback is not None:
             self.bus_callback.pre_receive(consumer)
         consumer_obj = self.adaptor.receive(consumer)
+        functor_consumer_obj = [i for i in consumer_obj if self.notifier.get_caller()]
         if self.bus_callback is not None:
             self.bus_callback.post_receive(consumer)
-        return consumer_obj
+        return functor_consumer_obj
 
-    def subscribe(self, consumer, topic, pattern=None, listener=None):
+    def subscribe(self, consumer, topic, notifier, pattern=None, listener=None):
+
+        self.notifier = notifier
         if self.bus_callback is not None:
             self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
         print("Listening to topic " + " ".join(topic))
+        self.mapper[consumer] = topic
+        #self.callables[consumer][topic] = notifier
         subscribe_obj =  self.adaptor.subscribe(consumer, topic)
         if self.bus_callback is not None:
             self.bus_callback.post_subscribe(self, consumer, topic, pattern=None, listener=None)
         return subscribe_obj
 
-    def unsubscribe(self, subscription):
-        return self.adaptor.unsubscribe(subscription)
+    def unsubscribe(self, consumer):
+        if consumer:
+            del self.mapper[consumer]
+        return self.adaptor.unsubscribe(consumer)
 
     def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
         if self.bus_callback is not None:

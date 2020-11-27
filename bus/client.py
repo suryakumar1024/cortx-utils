@@ -15,8 +15,9 @@ class BusClient(object):
     def create(self):
         self.busHandle.create(self.role)
 
-    def subscribe(self, topic):
-        return self.busHandle.subscribe(self.bus_client, topic)
+    def subscribe(self, topic, notifier):
+        # self.mapper[]
+        return self.busHandle.subscribe(self.bus_client, topic, notifier)
     
     def unsubscribe(self, subscription):
         return self.busHandle.unsubscribe(subscription)

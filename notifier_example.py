@@ -8,26 +8,31 @@ from message import Message
 
 from utils import log_decorator
 
-    
+
+def add(topic):
+    if 'testing' in topic :
+        return True
+    else:
+        return False
+
 
 @log_decorator
 def main():
-
-    #config = Config()
+    # config = Config()
     bus_start = Bus('kafka')
     prod_obj = Producer(bus_start)
 
     print('*' * 45)
     print('Sending messages . . .')
-    msg_obj = Message("This is message", "testing","json")
+    msg_obj = Message("This is message", "testing", "json")
     for i in range(2):
         prod_obj.send(msg_obj)
 
     cons_obj = Consumer(bus_start)
     print('Subscribing messages . . .')
-    subscription = cons_obj.subscribe(['testing'])
+    subscription = cons_obj.subscribe(['testing'], add)
     msg1 = cons_obj.receive(subscription)
-    print('*'*45)
+    print('*' * 45)
 
     print('Receiving messages 1 . . .')
     for each in msg1:
@@ -41,6 +46,7 @@ def main():
     print('Receiving messages 2 . . .')
     for each in msg2:
         print(each)
+
 
 if __name__ == "__main__":
     main()
