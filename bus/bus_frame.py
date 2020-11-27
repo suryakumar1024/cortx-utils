@@ -109,7 +109,8 @@ class Bus(metaclass=Singleton):
             self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
         print("Listening to topic " + " ".join(topic))
         self.mapper[consumer] = topic
-        #self.callables[consumer][topic] = notifier
+        self.callables[consumer] = {}
+        self.callables[consumer][notifier] = topic
         subscribe_obj =  self.adaptor.subscribe(consumer, topic)
         if self.bus_callback is not None:
             self.bus_callback.post_subscribe(self, consumer, topic, pattern=None, listener=None)
@@ -118,6 +119,7 @@ class Bus(metaclass=Singleton):
     def unsubscribe(self, consumer):
         if consumer:
             del self.mapper[consumer]
+            del self.callables[consumer]
         return self.adaptor.unsubscribe(consumer)
 
     def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
