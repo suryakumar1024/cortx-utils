@@ -1,5 +1,8 @@
+# Kafka-Python
 from adaptee.kafka_python_adaptor import KafkaAdaptee
-from config import KafkaConfig
+# Confluent-kafka-python
+from adaptee.confluent_kafka_adaptor import ConfluentAdaptee
+from config import KafkaConfig, ConfluentKafkaConfig
 import logging
 log = logging.getLogger(__name__)
 from template.singleton import Singleton
@@ -26,11 +29,15 @@ class Bus(metaclass=Singleton):
 
         self.schema = TopicSchema()
         self.client_list = []
-        
+
     def __load_adaptor(self, mq_bus_name):
         if mq_bus_name == 'kafka':
             self.config = KafkaConfig().get_config()
             self.adaptor = KafkaAdaptee(self.config)
+            self.admin = self.adaptor.create_admin()
+        elif mq_bus_name == 'confluent':
+            self.config = ConfluentKafkaConfig().get_config()
+            self.adaptor = ConfluentAdaptee(self.config)
             self.admin = self.adaptor.create_admin()
         else:
             self.adaptor = KafkaAdaptee(self.config)
@@ -93,17 +100,18 @@ class Bus(metaclass=Singleton):
         return self.schema.get_topic(client, message)
 
     def receive(self, consumer ):
-        #print('bus subscribeee....', self.notifier.get_caller())
         if self.bus_callback is not None:
             self.bus_callback.pre_receive(consumer)
         consumer_obj = self.adaptor.receive(consumer)
-        functor_consumer_obj = [i for i in consumer_obj if self.notifier.get_caller()]
+        # Need to fix the code -Surya
+        # functor_consumer_obj = [i for i in consumer_obj if self.notifier.get_caller()]
+        functor_consumer_obj = consumer_obj
         if self.bus_callback is not None:
             self.bus_callback.post_receive(consumer)
         return functor_consumer_obj
 
     def subscribe(self, consumer, topic, notifier, pattern=None, listener=None):
-
+        # This doesn't receive any consumer message itself. Need to use receive to receive message packets
         self.notifier = notifier
         if self.bus_callback is not None:
             self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
@@ -136,6 +144,6 @@ class Bus(metaclass=Singleton):
         pass
 
     def get_all_topics(self):
-        print('inside bus get topic')
+        # Will return all created topics
         return self.adaptor.get_all_topics()
 

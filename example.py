@@ -8,7 +8,11 @@ from message import Message
 
 from utils import log_decorator
 
-    
+def check(topic):
+    if 'default' in topic :
+        return True
+    else:
+        return False
 
 @log_decorator
 def main():
@@ -19,13 +23,13 @@ def main():
 
     print('*' * 45)
     print('Sending messages . . .')
-    msg_obj = Message("This is message", "testing","json")
+    msg_obj = Message("This is message", "default","json")
     for i in range(2):
         prod_obj.send(msg_obj)
 
     cons_obj = Consumer(bus_start)
     print('Subscribing messages . . .')
-    subscription = cons_obj.subscribe(['testing'])
+    subscription = cons_obj.subscribe(['default'], check)
     msg1 = cons_obj.receive(subscription)
     print('*'*45)
 
