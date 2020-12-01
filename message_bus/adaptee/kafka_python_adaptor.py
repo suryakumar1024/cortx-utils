@@ -1,10 +1,7 @@
-import logging
-
 from kafka import KafkaAdminClient, KafkaProducer, KafkaConsumer
 from kafka.admin import NewTopic
-from adaptee.adaptee import Adaptee
-
-from utils import log_decorator
+from message_bus.adaptee import Adaptee
+from message_bus.utils import log_decorator
 
 
 class KafkaAdaptee(Adaptee):

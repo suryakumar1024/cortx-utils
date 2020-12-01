@@ -1,11 +1,11 @@
-from confluent_kafka.cimpl import Producer, Consumer
-from confluent_kafka.admin import AdminClient, NewTopic, ClusterMetadata
 import logging
 import sys
 from collections import namedtuple
-from adaptee.adaptee import Adaptee
 
-from utils import log_decorator
+from confluent_kafka.cimpl import Producer, Consumer
+from confluent_kafka.admin import AdminClient, NewTopic, ClusterMetadata
+from message_bus.adaptee import Adaptee
+from message_bus.utils import log_decorator
 
 ConsumerRecord = namedtuple("ConsumerRecord",
                             ["topic", "message", "partition", "offset", "key"])

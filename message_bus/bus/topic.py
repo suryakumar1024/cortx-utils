@@ -1,6 +1,6 @@
 from kafka.admin import KafkaAdminClient
 
-from utils import log_decorator
+from message_bus.utils import log_decorator
 
 class Topic(object):
 

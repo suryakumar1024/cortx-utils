@@ -1,5 +1,5 @@
-from constants import MessageConst as msg_c
-from message import MessageHeader
+from message_bus.constants import MessageConst as msg_c
+from message_bus.message import MessageHeader
 
 class Message(object):
 

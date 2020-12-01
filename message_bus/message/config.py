@@ -1,5 +1,5 @@
-from utils import validate_string
-from constants import MessageConst as msg_c
+from message_bus.utils import validate_string
+from message_bus.constants import MessageConst as msg_c
 
 class MessageConfig(object):
 

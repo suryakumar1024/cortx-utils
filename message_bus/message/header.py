@@ -1,4 +1,4 @@
-from message.config import MessageConfig
+from message_bus.message import MessageConfig
 
 class MessageHeader(object):
     # def __new__(cls, *args, **kwargs):

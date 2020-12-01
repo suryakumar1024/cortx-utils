@@ -1,6 +1,6 @@
 
-from bus.client import BusClient
-from functor import Callable
+from message_bus.bus import BusClient
+from message_bus.functor import Callable
 
 class Consumer(BusClient):
 

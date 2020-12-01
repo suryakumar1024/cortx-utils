@@ -1,5 +1,5 @@
 import logging
-from bus.client import BusClient
+from message_bus.bus import BusClient
 
 log = logging.getLogger(__name__)
 

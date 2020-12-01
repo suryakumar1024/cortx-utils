@@ -1,14 +1,16 @@
-# Kafka-Python
-from adaptee.kafka_python_adaptor import KafkaAdaptee
-# Confluent-kafka-python
-from adaptee.confluent_kafka_adaptor import ConfluentAdaptee
-from config import KafkaConfig, ConfluentKafkaConfig
 import logging
 log = logging.getLogger(__name__)
-from template.singleton import Singleton
-from bus.topic_schema import TopicSchema
-from bus.topic import Topic
-from utils import log_decorator
+
+# Kafka-Python
+from message_bus.adaptee import KafkaAdaptee
+# Confluent-kafka-python
+from message_bus.adaptee import ConfluentAdaptee
+from message_bus.config import KafkaConfig, ConfluentKafkaConfig
+
+from message_bus.template.singleton import Singleton
+from message_bus.bus.topic_schema import TopicSchema
+from message_bus.bus.topic import Topic
+from message_bus.utils import log_decorator
 
 
 class Bus(metaclass=Singleton):
