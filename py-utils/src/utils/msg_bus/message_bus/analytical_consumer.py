@@ -3,7 +3,11 @@ from message_bus.utils import add, check_topic, last_one_hour_data
 
 class AnalyticalConsumer(Consumer):
     def __init__(self):
-        self.method = None
+        self.fragments = {
+            'add': add,
+            'check_topic': check_topic,
+            'last_one_hour_data': last_one_hour_data
+        }
 
     def query(self, regex):
         pass
@@ -12,13 +16,6 @@ class AnalyticalConsumer(Consumer):
         pass
 
     def receive_aggregate(self, operation):
-        fragments = {
-            'add': add,
-            'check_topic': check_topic,
-            'last_one_hour_data': last_one_hour_data
-        }
-        #self.method = [v for k, v in fragments.items() if k == callable_func]
-        # for k, v in fragments.items():
-        #     if k == operation:
-        self.method = fragments[operation]
+
+        self.method = self.fragments[operation]
         return self.method
