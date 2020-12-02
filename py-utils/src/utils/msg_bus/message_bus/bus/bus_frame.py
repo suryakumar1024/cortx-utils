@@ -22,7 +22,10 @@ class Bus(metaclass=Singleton):
         self.callables = {}
         self.mq_bus_name = mq_bus_name
         self.bus_callback = bus_callback
-        # Do configurations here
+        self.m_factory = Factory({
+            "kafka-python": kafkaFactory,
+            "confluent-kafka": ConfluentFactory
+        })
         self.__load_adaptor(mq_bus_name)
         if self.config is not None:
             self.__load_topic()
@@ -31,15 +34,8 @@ class Bus(metaclass=Singleton):
         self.client_list = []
 
     def __load_adaptor(self, mq_bus_name):
-
-        m_factory = Factory({
-                "kafka-python": kafkaFactory,
-                "confluent-kafka": ConfluentFactory
-        })
-        factory = m_factory("kafka-python")
-        self.config = factory.config
-        self.adaptor = factory.adaptor
-        self.admin = factory.admin
+        #config
+        self.config, self.adaptor, self.admin = self.m_factory("kafka-python")
 
 
     def __load_topic(self):
