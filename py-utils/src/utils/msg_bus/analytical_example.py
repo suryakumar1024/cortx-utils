@@ -1,17 +1,14 @@
 from message_bus.bus import Bus
-from message_bus.bus import MyCallback
+# from bus.callback import MyCallback
 from message_bus import Producer
 from message_bus import Consumer
-from message_bus.config import Config
+from message_bus.analytical_consumer import AnalyticalConsumer
+# from config import Config
+# from bus.topic import Topic
 from message_bus.message import Message
+
 from message_bus.utils import log_decorator
 
-
-def add(topic):
-    if 'testing' in topic :
-        return True
-    else:
-        return False
 
 
 @log_decorator
@@ -28,7 +25,8 @@ def main():
 
     cons_obj = Consumer(bus_start)
     print('Subscribing messages . . .')
-    subscription = cons_obj.subscribe(['testing'], add)
+    analytics = AnalyticalConsumer()
+    subscription = cons_obj.subscribe(['testing'], analytics.receive_aggregate('add'))
     msg1 = cons_obj.receive(subscription)
     print('*' * 45)
 

@@ -6,8 +6,6 @@ class Config(object):
 
 class KafkaConfig(Config):
     def __init__(self):
-        pass
-    def get_config(self):
         #Read from file
         self.config = {
             'bus': "kafka",
@@ -16,6 +14,8 @@ class KafkaConfig(Config):
             'producer': [{'bootstrap_servers': 'localhost:9092'}],
             'consumer': [{'bootstrap_servers': 'localhost:9092', 'auto_offset_reset': 'earliest', 'consumer_timeout_ms': 1000}]
         }
+
+    def get_config(self):
         return self.config
 
 class ConfluentKafkaConfig(Config):
