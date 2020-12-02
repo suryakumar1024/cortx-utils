@@ -8,6 +8,6 @@ class Callable(Functor):
         self.topic = topic
         self.caller = caller
         
-    def get_caller(self):
-        return self.caller(self.topic)
+    def get_caller(self, messages):
+        return self.caller(messages)
 

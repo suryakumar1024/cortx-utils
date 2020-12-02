@@ -10,9 +10,11 @@ class Consumer(BusClient):
     def send(self):
         pass
 
-    def subscribe(self, topic, func_call):
-    #def subscribe(self, topic):
-        notifier = Callable(topic, func_call)
+    def subscribe(self, topic, func_call=None):
+        if func_call is not None:
+            notifier = Callable(topic, func_call)
+        else:
+            notifier = None
         return super().subscribe(topic, notifier)
 
     def unsubscribe(self, subscription):

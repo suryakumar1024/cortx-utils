@@ -3,11 +3,9 @@ log = logging.getLogger(__name__)
 
 # Kafka-Python
 from message_bus.adaptee import KafkaAdaptee
-# Confluent-kafka-python
-from message_bus.adaptee import ConfluentAdaptee
-from message_bus.config import KafkaConfig, ConfluentKafkaConfig
-
-from message_bus.template.singleton import Singleton
+from message_bus.bus.callback import MyCallback
+from message_bus.template import kafkaFactory, ConfluentFactory
+from message_bus.template import Factory, Singleton
 from message_bus.bus.topic_schema import TopicSchema
 from message_bus.bus.topic import Topic
 from message_bus.utils import log_decorator
@@ -16,7 +14,7 @@ from message_bus.utils import log_decorator
 class Bus(metaclass=Singleton):
 
     @log_decorator
-    def __init__(self, mq_bus_name, bus_callback = None):
+    def __init__(self, mq_bus_name, bus_callback=MyCallback()):
         # log.debug("Init bus class")
         self.config = None
         self.notifier = None #notifier callable
@@ -33,16 +31,16 @@ class Bus(metaclass=Singleton):
         self.client_list = []
 
     def __load_adaptor(self, mq_bus_name):
-        if mq_bus_name == 'kafka':
-            self.config = KafkaConfig().get_config()
-            self.adaptor = KafkaAdaptee(self.config)
-            self.admin = self.adaptor.create_admin()
-        elif mq_bus_name == 'confluent':
-            self.config = ConfluentKafkaConfig().get_config()
-            self.adaptor = ConfluentAdaptee(self.config)
-            self.admin = self.adaptor.create_admin()
-        else:
-            self.adaptor = KafkaAdaptee(self.config)
+
+        m_factory = Factory({
+                "kafka-python": kafkaFactory,
+                "confluent-kafka": ConfluentFactory
+        })
+        factory = m_factory("kafka-python")
+        self.config = factory.config
+        self.adaptor = factory.adaptor
+        self.admin = factory.admin
+
 
     def __load_topic(self):
         # {bus:"kafka", topics:[{name:"Alert", replication_factor:3, policy:"Remove_on_ACK"}], }
@@ -73,19 +71,18 @@ class Bus(metaclass=Singleton):
 
     def create(self, role):
         self.role = role
-        if self.bus_callback is not None:
-            self.precreate_busclient(self, role)
+
+        self.bus_callback.precreate_busclient(self.role)
         create_busclient = self.adaptor.create(self.role)
-        if self.bus_callback is not None:
-            self.postcreate_busclient(self, role)
+        self.bus_callback.postcreate_busclient(self.role)
+
         return create_busclient
 
     @log_decorator
     def send(self, producer, message):
         topic = self.schema.get_topic(message, producer)
-        if self.bus_callback is not None:
-            self.bus_callback.pre_send(producer, topic, message)
-        print(f"Message '{message.payload}' sending to topic -> in-progress")
+        self.bus_callback.pre_send(producer, topic, message)
+
         all_topic_list = self.get_all_topics()
         if topic in all_topic_list:
         #if True:
@@ -94,36 +91,35 @@ class Bus(metaclass=Singleton):
             # logging.debug("Topic not exist. Create the topic before sending")
             raise KeyError("Topic not exist. Create the topic before sending")
         # Will post send consider exception too
-        if self.bus_callback is not None:
-            self.bus_callback.post_send(producer, topic, message)
+        self.bus_callback.post_send(producer, topic, message)
 
 
     def get_topic(self, client, message):
         return self.schema.get_topic(client, message)
 
     def receive(self, consumer ):
-        if self.bus_callback is not None:
-            self.bus_callback.pre_receive(consumer)
+        self.bus_callback.pre_receive(consumer)
         consumer_obj = self.adaptor.receive(consumer)
-        # Need to fix the code -Surya
-        # functor_consumer_obj = [i for i in consumer_obj if self.notifier.get_caller()]
-        functor_consumer_obj = consumer_obj
-        if self.bus_callback is not None:
-            self.bus_callback.post_receive(consumer)
-        return functor_consumer_obj
+
+        if self.notifier is not None:
+            consumer_obj = self.notifier.get_caller(consumer_obj)
+
+        self.bus_callback.post_receive(consumer)
+        return consumer_obj
 
     def subscribe(self, consumer, topic, notifier, pattern=None, listener=None):
         # This doesn't receive any consumer message itself. Need to use receive to receive message packets
-        self.notifier = notifier
-        if self.bus_callback is not None:
-            self.bus_callback.pre_subscribe(self, consumer, topic, pattern=None, listener=None)
-        print("Listening to topic " + " ".join(topic))
+        if notifier is not None:
+            self.notifier = notifier
+
+        self.bus_callback.pre_subscribe(consumer, topic, pattern=None, listener=None)
+
         self.mapper[consumer] = topic
         self.callables[consumer] = {}
         self.callables[consumer][notifier] = topic
         subscribe_obj =  self.adaptor.subscribe(consumer, topic)
-        if self.bus_callback is not None:
-            self.bus_callback.post_subscribe(self, consumer, topic, pattern=None, listener=None)
+
+        self.bus_callback.post_subscribe(consumer, topic, pattern=None, listener=None)
         return subscribe_obj
 
     def unsubscribe(self, consumer):
@@ -133,11 +129,9 @@ class Bus(metaclass=Singleton):
         return self.adaptor.unsubscribe(consumer)
 
     def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
-        if self.bus_callback is not None:
-            self.bus_callback.precreate_topic(self,topic_name, timeout_ms=None, validate_only=False)
+        self.bus_callback.precreate_topic(topic_name, timeout_ms=None, validate_only=False)
         self.adaptor.create_topics(topic_name, timeout_ms, validate_only)
-        if self.bus_callback is not None:
-            self.bus_callback.postcreate_topic(self,topic_name, timeout_ms=None, validate_only=False)
+        self.bus_callback.postcreate_topic(topic_name, timeout_ms=None, validate_only=False)
 
     def configure(self):
         pass
