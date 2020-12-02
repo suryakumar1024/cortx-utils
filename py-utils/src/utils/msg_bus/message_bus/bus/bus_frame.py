@@ -35,7 +35,8 @@ class Bus(metaclass=Singleton):
 
     def __load_adaptor(self, mq_bus_name):
         #config
-        self.config, self.adaptor, self.admin = self.m_factory("kafka-python")
+        factory = self.m_factory("kafka-python")
+        self.config, self.adaptor, self.admin = factory.config, factory.adaptor, factory.admin
 
 
     def __load_topic(self):

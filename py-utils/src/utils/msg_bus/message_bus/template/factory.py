@@ -12,10 +12,14 @@ class Factory(object):
 class kafkaFactory(Factory):
 
     def __init__(self):
-        return KafkaConfig().get_config(), KafkaAdaptee(self.config), self.adaptor.create_admin()
+        self.config = KafkaConfig().get_config()
+        self.adaptor = KafkaAdaptee(self.config)
+        self.admin =  self.adaptor.create_admin()
 
 
 class ConfluentFactory(Factory):
 
     def __init__(self):
-        return ConfluentKafkaConfig().get_config(), ConfluentAdaptee(self.config), self.adaptor.create_admin()
+        self.config = ConfluentKafkaConfig().get_config()
+        self.adaptor = ConfluentAdaptee(self.config)
+        self.admin = self.adaptor.create_admin()
