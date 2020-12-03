@@ -1,5 +1,19 @@
 from src.utils.message_bus.constants import MessageConst as msg_c
-from src.utils.message_bus.message import MessageHeader
+from src.utils.message_bus.utils import validate_string
+
+
+class MessageHeader(object):
+
+    def __init__(self,m_type):
+        self.msg_con_obj = MessageConfig()
+        self.message_type = self.msg_con_obj.get_message_config(m_type)
+
+    def create(self):
+        pass
+    def remove(self, type):
+        pass
+    def update(self, old, new):
+        pass
 
 class Message(object):
 
@@ -27,3 +41,23 @@ class Message(object):
 
     def format_message(self, msg, m_format):
         return msg
+
+
+class MessageConfig(object):
+
+    def __init__(self):
+        self.message_type = msg_c.MESSAGE_TYPE_LIST
+
+    @validate_string
+    def create(self, m_type):
+        pass
+
+    def get_message_config(self, m_type):
+        if m_type in self.message_type:
+            return m_type
+        else:
+            raise KeyError("Message configuration not found")
+
+class MessageFormat(object):
+    pass
+
