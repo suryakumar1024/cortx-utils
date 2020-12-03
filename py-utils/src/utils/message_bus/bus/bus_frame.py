@@ -13,6 +13,7 @@ class MessageBus(metaclass=Singleton):
 
     @log_decorator
     def __init__(self, mq_bus_name, bus_callback=MyCallback()):
+        print(mq_bus_name)
         self.config = None
         self.notifier = None #notifier callable
         self.mapper = {}
