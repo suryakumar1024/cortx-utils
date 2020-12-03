@@ -1,5 +1,0 @@
-from __future__ import absolute_import
-
-from message_bus.adaptee.adaptee import Adaptee
-from message_bus.adaptee.kafka_python_adaptor import KafkaAdaptee
-from message_bus.adaptee.confluent_kafka_adaptor import ConfluentAdaptee
