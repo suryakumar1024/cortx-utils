@@ -15,12 +15,9 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from src.utils.message_bus.bus import BusClient
-
-class Producer(BusClient):
-    def __init__(self, busHandle):
-
-        super().__init__(busHandle, 'PRODUCER')
-
-    def send(self, message):
-        super().send(message)
+class Singleton(type):
+    _obj = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._obj:
+            cls._obj[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._obj[cls]

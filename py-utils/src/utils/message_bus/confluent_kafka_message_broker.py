@@ -1,17 +1,32 @@
-import logging
+#!/usr/bin/env python3
+
+# CORTX-Py-Utils: CORTX Python common library.
+# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# For any questions about this software or licensing,
+# please email opensource@seagate.com or cortx-questions@seagate.com.
+
+
 import sys
 from collections import namedtuple
-
 from confluent_kafka.cimpl import Producer, Consumer
 from confluent_kafka.admin import AdminClient, NewTopic, ClusterMetadata
-from src.utils.message_bus.adaptee import Adaptee
-from src.utils.message_bus.utils import log_decorator
+from src.utils.message_bus import MessageBroker
 
 ConsumerRecord = namedtuple("ConsumerRecord",
                             ["topic", "message", "partition", "offset", "key"])
 
 
-class ConfluentAdaptee(Adaptee):
+class ConfluentKafkaMessageBroker(MessageBroker):
 
     def __init__(self, config):
         try:
@@ -22,7 +37,6 @@ class ConfluentAdaptee(Adaptee):
 
     def create_admin(self):
         config = self.config['client'][0]
-        # self.admin = AdminClient(**config)
         self.admin = AdminClient(config)
         return self.admin
 
@@ -32,19 +46,10 @@ class ConfluentAdaptee(Adaptee):
                              replication_factor=1)
         self.admin.create_topics([new_topic])
 
-    @log_decorator
     def send(self, producer, topic, message):
         producer.produce(topic, message)
 
     def receive(self, consumer):
-        # if consumer:
-        #     return list(consumer)
-        # else:
-        #     return 'No Subscription'
-
-        # finally:
-        # Close down consumer to commit final offsets.
-        # consumer.close()
         msg_list = self.receive_subscribed_topic(consumer)
         return msg_list
 
@@ -67,22 +72,14 @@ class ConfluentAdaptee(Adaptee):
             sys.stderr.write('%% Aborted by user\n')
 
     def subscribe(self, consumer, topic=None, listener='listen'):
-        self.mapper[consumer] = topic
         consumer.subscribe(topic)
         return consumer
 
     def unsubscribe(self, consumer):
-        print('mapper', self.mapper)
-        if consumer:
-            del self.mapper[consumer]
-        print('mapper', self.mapper)
         consumer.unsubscribe()
-        # consumer.close()
         return consumer
 
-    # def closeChannel(self):
-    #     producer.close()
-    # @log_decorator
+
     def create(self, role):
         if role == 'PRODUCER':
             config = self.config['producer'][0]
@@ -93,11 +90,8 @@ class ConfluentAdaptee(Adaptee):
             consumer = Consumer(**config)
             return consumer
         else:
-            print('pass')
-            pass
-            # assert(role)
+            assert role == 'PRODUCER' or role == 'CONSUMER'
 
-    @log_decorator
     def create_topics(self, new_topics, timeout_ms=None, validate_only=False):
         new_topics = NewTopic(name=new_topics, num_partitions=1, replication_factor=1)
         return self.admin.create_topics([new_topics], timeout_ms, validate_only)

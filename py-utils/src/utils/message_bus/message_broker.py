@@ -15,12 +15,23 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from src.utils.message_bus.bus import BusClient
+class MessageBroker(object):
+    def __init__(self, config):
+        pass
 
-class Producer(BusClient):
-    def __init__(self, busHandle):
+    def send(self, producer, topic, message):
+        pass
 
-        super().__init__(busHandle, 'PRODUCER')
+    def receive(self, consumer):
+        pass
 
-    def send(self, message):
-        super().send(message)
+    def create(self, role):
+        pass
+
+    def subscribe(self, consumer, topic=None, listener='listen'):
+        pass
+
+    def unsubscribe(self, consumer):
+        pass
+
+

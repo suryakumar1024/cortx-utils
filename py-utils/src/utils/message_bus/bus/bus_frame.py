@@ -1,39 +1,50 @@
-import logging
-log = logging.getLogger(__name__)
+#!/usr/bin/env python3
+
+# CORTX-Py-Utils: CORTX Python common library.
+# Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <https://www.gnu.org/licenses/>.
+# For any questions about this software or licensing,
+# please email opensource@seagate.com or cortx-questions@seagate.com.
 
 from src.utils.message_bus.bus.callback import MyCallback
-from src.utils.message_bus.template import kafkaFactory, ConfluentFactory
-from src.utils.message_bus.template import Factory, Singleton
+from src.template import Factory, Singleton
+from src.utils.message_bus import KafkaFactory, ConfluentFactory
 from src.utils.message_bus.bus.topic_schema import TopicSchema
 from src.utils.message_bus.bus.topic import Topic
-from src.utils.message_bus.utils import log_decorator
 from src.utils.message_bus.exceptions import KeyNotFoundError
 
 class MessageBus(metaclass=Singleton):
 
-    @log_decorator
-    def __init__(self, mq_bus_name, bus_callback=MyCallback()):
-        print(mq_bus_name)
-        self.config = None
+    def __init__(self, config, bus_callback=MyCallback()):
+
+        self.config = config.get_config()
         self.notifier = None #notifier callable
         self.mapper = {}
         self.callables = {}
         self.bus_callback = bus_callback
         self.m_factory = Factory({
-            "kafka-python": kafkaFactory,
+            "kafka-python": KafkaFactory,
             "confluent-kafka": ConfluentFactory
         })
-        self.__load_adaptor(mq_bus_name)
+        self.__load_adapter(self.config)
         if self.config is not None:
             self.__load_topic()
 
         self.schema = TopicSchema()
         self.client_list = []
 
-    def __load_adaptor(self, mq_bus_name):
-        print(mq_bus_name)
-        factory = self.m_factory(mq_bus_name)
-        self.config, self.adaptor, self.admin = factory.config, factory.adaptor, factory.admin
+    def __load_adapter(self, config):
+        factory = self.m_factory(config)
+        self.config, self.adapter, self.admin = factory.config, factory.adapter, factory.admin
 
 
     def __load_topic(self):
@@ -66,12 +77,11 @@ class MessageBus(metaclass=Singleton):
         self.role = role
 
         self.bus_callback.precreate_busclient(self.role)
-        create_busclient = self.adaptor.create(self.role)
+        create_busclient = self.adapter.create(self.role)
         self.bus_callback.postcreate_busclient(self.role)
 
         return create_busclient
 
-    @log_decorator
     def send(self, producer, message):
         topic = self.schema.get_topic(message, producer)
         self.bus_callback.pre_send(producer, topic, message)
@@ -79,7 +89,7 @@ class MessageBus(metaclass=Singleton):
         all_topic_list = self.get_all_topics()
         if topic in all_topic_list:
             try:
-                self.adaptor.send(producer, topic, bytes(message.payload, 'utf-8'))
+                self.adapter.send(producer, topic, bytes(message.payload, 'utf-8'))
             except:
                 raise KeyNotFoundError
 
@@ -92,7 +102,7 @@ class MessageBus(metaclass=Singleton):
 
     def receive(self, consumer ):
         self.bus_callback.pre_receive(consumer)
-        consumer_obj = self.adaptor.receive(consumer)
+        consumer_obj = self.adapter.receive(consumer)
 
         if self.notifier is not None:
             consumer_obj = self.notifier.get_caller(consumer_obj)
@@ -110,7 +120,7 @@ class MessageBus(metaclass=Singleton):
         self.mapper[consumer] = topic
         self.callables[consumer] = {}
         self.callables[consumer][notifier] = topic
-        subscribe_obj =  self.adaptor.subscribe(consumer, topic)
+        subscribe_obj =  self.adapter.subscribe(consumer, topic)
 
         self.bus_callback.post_subscribe(consumer, topic, pattern=None, listener=None)
         return subscribe_obj
@@ -119,11 +129,11 @@ class MessageBus(metaclass=Singleton):
         if consumer:
             del self.mapper[consumer]
             del self.callables[consumer]
-        return self.adaptor.unsubscribe(consumer)
+        return self.adapter.unsubscribe(consumer)
 
     def create_topic(self,topic_name, timeout_ms=None, validate_only=False):
         self.bus_callback.precreate_topic(topic_name, timeout_ms=None, validate_only=False)
-        self.adaptor.create_topics(topic_name, timeout_ms, validate_only)
+        self.adapter.create_topics(topic_name, timeout_ms, validate_only)
         self.bus_callback.postcreate_topic(topic_name, timeout_ms=None, validate_only=False)
 
     def configure(self):
@@ -134,5 +144,5 @@ class MessageBus(metaclass=Singleton):
 
     def get_all_topics(self):
         # Will return all created topics
-        return self.adaptor.get_all_topics()
+        return self.adapter.get_all_topics()
 

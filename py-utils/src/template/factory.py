@@ -15,12 +15,10 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
-from src.utils.message_bus.bus import BusClient
+class Factory(object):
 
-class Producer(BusClient):
-    def __init__(self, busHandle):
+    def __init__(self, adapters):
+        self.m_dict = adapters
 
-        super().__init__(busHandle, 'PRODUCER')
-
-    def send(self, message):
-        super().send(message)
+    def __call__(self, config):
+        return self.m_dict[config['bus']]()
