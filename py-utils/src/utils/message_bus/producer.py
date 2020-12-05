@@ -19,7 +19,6 @@ from src.utils.message_bus.bus import BusClient
 
 class Producer(BusClient):
     def __init__(self, busHandle):
-
         super().__init__(busHandle, 'PRODUCER')
 
     def send(self, message):

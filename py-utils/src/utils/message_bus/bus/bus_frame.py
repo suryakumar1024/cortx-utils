@@ -73,11 +73,11 @@ class MessageBus(metaclass=Singleton):
         # check MQ and it's configuration here
         return client_cls()
 
-    def create(self, role):
+    def create(self, role, message_type=None):
         self.role = role
-
+        self.message_type = message_type
         self.bus_callback.precreate_busclient(self.role)
-        create_busclient = self.adapter.create(self.role)
+        create_busclient = self.adapter.create(self.role, self.message_type)
         self.bus_callback.postcreate_busclient(self.role)
 
         return create_busclient
@@ -100,15 +100,24 @@ class MessageBus(metaclass=Singleton):
     def get_topic(self, client, message):
         return self.schema.get_topic(client, message)
 
-    def receive(self, consumer ):
-        self.bus_callback.pre_receive(consumer)
-        consumer_obj = self.adapter.receive(consumer)
+    def receive(self ):
+        #self.bus_callback.pre_receive()
+        consumer_obj = self.adapter.receive()
 
         if self.notifier is not None:
             consumer_obj = self.notifier.get_caller(consumer_obj)
 
-        self.bus_callback.post_receive(consumer)
+        #self.bus_callback.post_receive()
         return consumer_obj
+
+        # self.bus_callback.pre_receive(consumer)
+        # consumer_obj = self.adapter.receive(consumer)
+        #
+        # if self.notifier is not None:
+        #     consumer_obj = self.notifier.get_caller(consumer_obj)
+        #
+        # self.bus_callback.post_receive(consumer)
+        # return consumer_obj
 
     def subscribe(self, consumer, topic, notifier, pattern=None, listener=None):
         # This doesn't receive any consumer message itself. Need to use receive to receive message packets

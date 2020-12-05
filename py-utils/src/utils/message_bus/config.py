@@ -21,12 +21,20 @@ class Config():
             self.file_handle = filename
         else:
             self.config = {
-                'bus': "kafka-python",
+                # bus -> message_broker (kafka)
+                # topics -> messahge_type
+                # client -> message_server
+                # remove producer, consumer
+                # include message_timeout
+                # auto_offset_reset -> message_offset_reset
+                'bus': "confluent-kafka",
                 'topics': [{'name': "Alert", 'replication_factor': 3, 'policy': "Remove_on_ACK"}],
                 'client': [{'bootstrap_servers': 'localhost:9092'}],
                 'producer': [{'bootstrap_servers': 'localhost:9092'}],
-                'consumer': [
-                    {'bootstrap_servers': 'localhost:9092', 'auto_offset_reset': 'earliest', 'consumer_timeout_ms': 1000}]
+                'consumer': [{'bootstrap.servers': 'localhost:9092','session.timeout.ms': 6000,
+            'group.id':'default', 'default.topic.config': {'auto.offset.reset': 'smallest'},
+                              'enable.auto.commit': True}
+                    ]
             }
     def get_config(self):
         return self.config

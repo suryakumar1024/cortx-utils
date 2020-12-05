@@ -46,9 +46,9 @@ class KafkaPythonMessageBroker(MessageBroker):
     def send(self, producer, topic, message):
         producer.send(topic, message)
 
-    def receive(self, consumer):
-        if consumer:
-            return list(consumer)
+    def receive(self):
+        if self.consumer:
+            return list(self.consumer)
         else:
             return 'No Subscription'
 
@@ -60,15 +60,15 @@ class KafkaPythonMessageBroker(MessageBroker):
         consumer.unsubscribe()
         return consumer
 
-    def create(self, role):
+    def create(self, role, message_type=None):
         if role == 'PRODUCER':
             config = self.config['producer'][0]
-            producer = KafkaProducer(**config)
-            return producer
+            self.producer = KafkaProducer(**config)
+            return self.producer
         elif role == 'CONSUMER':
             config = self.config['consumer'][0]
-            consumer = KafkaConsumer(**config)
-            return consumer
+            self.consumer = KafkaConsumer(message_type, **config)
+            return self.consumer
         else:
             assert role == 'PRODUCER' or role == 'CONSUMER'
 

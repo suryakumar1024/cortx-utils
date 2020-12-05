@@ -17,16 +17,18 @@
 
 
 class BusClient():
-    def __init__(self, busHandle, role):
+    def __init__(self, busHandle, role, message_type=None):
         self.role = role
         self.busHandle = busHandle
-        self.bus_client = self.busHandle.create(self.role)
+        self.message_type = message_type
+        self.bus_client = self.busHandle.create(self.role, self.message_type)
 
     def send(self, message=None):
         self.busHandle.send(self.bus_client, message)
 
-    def receive(self, consumer):
-        return self.busHandle.receive(consumer)
+    def receive(self):
+        return self.busHandle.receive()
+        #return self.busHandle.receive(consumer)
 
     def create(self):
         self.busHandle.create(self.role)

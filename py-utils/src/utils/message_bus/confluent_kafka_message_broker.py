@@ -18,7 +18,7 @@
 
 import sys
 from collections import namedtuple
-from confluent_kafka.cimpl import Producer, Consumer
+from confluent_kafka.cimpl import Producer, Consumer, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, ClusterMetadata
 from src.utils.message_bus import MessageBroker
 
@@ -49,8 +49,8 @@ class ConfluentKafkaMessageBroker(MessageBroker):
     def send(self, producer, topic, message):
         producer.produce(topic, message)
 
-    def receive(self, consumer):
-        msg_list = self.receive_subscribed_topic(consumer)
+    def receive(self):
+        msg_list = self.receive_subscribed_topic(self.consumer)
         return msg_list
 
     def receive_subscribed_topic(self, consumer):
@@ -80,15 +80,20 @@ class ConfluentKafkaMessageBroker(MessageBroker):
         return consumer
 
 
-    def create(self, role):
+    def create(self, role, message_type):
         if role == 'PRODUCER':
             config = self.config['producer'][0]
-            producer = Producer(**config)
-            return producer
+            self.producer = Producer(**config)
+            return self.producer
         elif role == 'CONSUMER':
             config = self.config['consumer'][0]
-            consumer = Consumer(**config)
-            return consumer
+            self.consumer = Consumer(**config)
+            parts = [TopicPartition('testing', 1, 50)]
+            self.consumer.subscribe(message_type)
+            print(self.consumer.commited(parts))
+            self.consumer.commit(offsets=parts)
+            print(self.consumer.commited(parts))
+            return self.consumer
         else:
             assert role == 'PRODUCER' or role == 'CONSUMER'
 

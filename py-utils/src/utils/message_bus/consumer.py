@@ -21,8 +21,8 @@ from src.utils.message_bus.functor import Callable
 
 class Consumer(BusClient):
 
-    def __init__(self, busHandle):
-        super().__init__(busHandle, 'CONSUMER')
+    def __init__(self, busHandle, message_type=None):
+        super().__init__(busHandle, 'CONSUMER', message_type)
 
     def send(self):
         pass
@@ -37,5 +37,6 @@ class Consumer(BusClient):
     def unsubscribe(self, subscription):
         return super().unsubscribe(subscription)
 
-    def receive(self, consumer):
-        return super().receive(consumer)
+    def receive(self):
+        return super().receive()
+        #return super().receive(consumer)
