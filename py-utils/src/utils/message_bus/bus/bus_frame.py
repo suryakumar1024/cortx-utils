@@ -86,6 +86,13 @@ class MessageBus(metaclass=Singleton):
         # Will post send consider exception too
         self.bus_callback.post_send(producer, topic, message)
 
+    def bulk_send(self, producer, topic, list_of_messages):
+        all_topic_list = self.get_all_topics()
+        if topic in all_topic_list:
+            self.adaptor.bulk_send(producer, topic, list_of_messages)
+        else:
+            raise Exception("Topic not exist. Create the topic before sending")
+
 
     def get_topic(self, client, message):
         return self.schema.get_topic(client, message)

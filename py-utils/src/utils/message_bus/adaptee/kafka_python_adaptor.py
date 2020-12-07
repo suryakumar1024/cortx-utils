@@ -29,6 +29,12 @@ class KafkaAdaptee(Adaptee):
     @log_decorator
     def send(self, producer, topic, message):
         producer.send(topic, message)
+    
+    def bulk_send(self, producer, topic, message_list) -> None:
+        # Sending bulk message
+        for each_message in message_list:
+            producer.send(topic, bytes(each_message.payload, 'utf-8'))
+        producer.flush()
 
     def receive(self, consumer):
         if consumer:

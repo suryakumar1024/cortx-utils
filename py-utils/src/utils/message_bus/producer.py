@@ -12,13 +12,14 @@ class Producer(BusClient):
         # self.producer = KafkaProducer(bootstrap_servers='localhost:9092')
         super().__init__(busHandle, 'PRODUCER')
 
+    def bulk_send(self, topic, list_of_messages):
+        # log.info("Bus bulk send messages")
+        super().bulk_send(topic, list_of_messages)
+        # log.info("Bus bulk send message completed")
+
     def send(self, message):
         log.info("Bus send message")
         print("Bus send message")
         super().send(message)
         log.info("Bus send message complete")
         print("Bus send message complete")
-
-    # Above implementation is enough
-    # def send(self, message):
-    #     pass

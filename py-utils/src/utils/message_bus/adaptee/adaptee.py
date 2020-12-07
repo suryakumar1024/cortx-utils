@@ -18,5 +18,6 @@ class Adaptee(object):
 
     def unsubscribe(self):
         pass
-
+    def bulk_send(self, producer, topic, message_list):
+        pass
 

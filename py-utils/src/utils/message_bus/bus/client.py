@@ -5,7 +5,10 @@ class BusClient(object):
         self.role = role
         self.busHandle = busHandle
         self.bus_client = self.busHandle.create(self.role)
-
+    
+    def bulk_send(self, topic, list_of_messages=None):
+        self.busHandle.bulk_send(self.bus_client, topic, list_of_messages)
+    
     def send(self, message=None):
         self.busHandle.send(self.bus_client, message)
 

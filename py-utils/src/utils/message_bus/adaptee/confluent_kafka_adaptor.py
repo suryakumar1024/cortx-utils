@@ -36,6 +36,12 @@ class ConfluentAdaptee(Adaptee):
     def send(self, producer, topic, message):
         producer.produce(topic, message)
 
+    def bulk_send(self, producer, topic, message_list) -> None:
+        # Sending bulk message
+        for each_message in message_list:
+            producer.produce(topic, bytes(each_message.payload, 'utf-8'))
+        producer.flush()
+
     def receive(self, consumer):
         # if consumer:
         #     return list(consumer)
@@ -49,6 +55,7 @@ class ConfluentAdaptee(Adaptee):
         return msg_list
 
     def receive_subscribed_topic(self, consumer):
+        # import ipdb; ipdb.set_trace()
         try:
             while True:
                 msg = consumer.poll(timeout=0.5)
@@ -61,12 +68,15 @@ class ConfluentAdaptee(Adaptee):
                     sys.stderr.write('%% %s [%d] at offset %d with key %s:\n' %
                                      (msg.topic(), msg.partition(), msg.offset(),
                                       str(msg.key())))
-                    yield ConsumerRecord(msg.topic(), msg.value(), msg.partition(), msg.offset(), str(msg.key()))
+                    print(msg)
+                    # print(ConsumerRecord(msg.topic(), msg.value(), msg.partition(), msg.offset(), str(msg.key())))
+                    return ConsumerRecord(msg.topic(), msg.value(), msg.partition(), msg.offset(), str(msg.key()))
 
         except KeyboardInterrupt:
             sys.stderr.write('%% Aborted by user\n')
 
     def subscribe(self, consumer, topic=None, listener='listen'):
+        # import ipdb; ipdb.set_trace()
         self.mapper[consumer] = topic
         consumer.subscribe(topic)
         return consumer
