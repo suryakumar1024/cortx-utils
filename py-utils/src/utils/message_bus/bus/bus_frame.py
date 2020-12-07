@@ -15,11 +15,11 @@
 # For any questions about this software or licensing,
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
+from src.utils.message_bus.bus.topic import Topic
+from src.utils.message_bus.bus.topic_schema import TopicSchema
 from src.utils.message_bus.bus.callback import MyCallback
 from src.template import Factory, Singleton
-from src.utils.message_bus import KafkaFactory, ConfluentFactory
-from src.utils.message_bus.bus.topic_schema import TopicSchema
-from src.utils.message_bus.bus.topic import Topic
+from src.utils.message_bus.confluent_factory import ConfluentFactory
 from src.utils.message_bus.exceptions import KeyNotFoundError
 
 class MessageBus(metaclass=Singleton):
@@ -27,13 +27,13 @@ class MessageBus(metaclass=Singleton):
     def __init__(self, config, bus_callback=MyCallback()):
 
         self.config = config.get_config()
-        self.notifier = None #notifier callable
+        self.notifier = None
         self.mapper = {}
         self.callables = {}
         self.bus_callback = bus_callback
         self.m_factory = Factory({
-            "kafka-python": KafkaFactory,
-            "confluent-kafka": ConfluentFactory
+            "kafka": ConfluentFactory,
+            #"confluent-kafka": ConfluentFactory
         })
         self.__load_adapter(self.config)
         if self.config is not None:
@@ -51,7 +51,7 @@ class MessageBus(metaclass=Singleton):
         # will get the schema from config file . convert the string in config.schema
         # to TopicInMessage using factory patter
         self.schema = TopicSchema()
-        for t in self.config['topics']:
+        for t in self.config['message_type']:
             topic = Topic(t)
             print('*'*10, topic.name)
             self.schema.set_topic(topic.name, topic)

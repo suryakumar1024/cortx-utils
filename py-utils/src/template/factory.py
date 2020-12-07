@@ -21,4 +21,4 @@ class Factory(object):
         self.m_dict = adapters
 
     def __call__(self, config):
-        return self.m_dict[config['bus']]()
+        return self.m_dict[config['message_broker']]()

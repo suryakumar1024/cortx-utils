@@ -18,9 +18,9 @@
 
 import sys
 from collections import namedtuple
-from confluent_kafka.cimpl import Producer, Consumer, TopicPartition
+from confluent_kafka import Producer, Consumer, TopicPartition
 from confluent_kafka.admin import AdminClient, NewTopic, ClusterMetadata
-from src.utils.message_bus import MessageBroker
+from src.utils.message_bus.message_broker import MessageBroker
 
 ConsumerRecord = namedtuple("ConsumerRecord",
                             ["topic", "message", "partition", "offset", "key"])
@@ -36,7 +36,7 @@ class ConfluentKafkaMessageBroker(MessageBroker):
             print(e)
 
     def create_admin(self):
-        config = self.config['client'][0]
+        config = self.config['message_server'][0]
         self.admin = AdminClient(config)
         return self.admin
 
@@ -79,7 +79,6 @@ class ConfluentKafkaMessageBroker(MessageBroker):
         consumer.unsubscribe()
         return consumer
 
-
     def create(self, role, message_type):
         if role == 'PRODUCER':
             config = self.config['producer'][0]
@@ -87,12 +86,11 @@ class ConfluentKafkaMessageBroker(MessageBroker):
             return self.producer
         elif role == 'CONSUMER':
             config = self.config['consumer'][0]
-            self.consumer = Consumer(**config)
-            parts = [TopicPartition('testing', 1, 50)]
+            #self.consumer = Consumer(**config)
+            self.consumer = Consumer({'bootstrap.servers': 'localhost:9092', 'group.id': 'sspl',
+                                      'auto.offset.reset': 'earliest',
+                                      'enable.auto.commit': False})
             self.consumer.subscribe(message_type)
-            print(self.consumer.commited(parts))
-            self.consumer.commit(offsets=parts)
-            print(self.consumer.commited(parts))
             return self.consumer
         else:
             assert role == 'PRODUCER' or role == 'CONSUMER'
@@ -100,7 +98,6 @@ class ConfluentKafkaMessageBroker(MessageBroker):
     def create_topics(self, new_topics, timeout_ms=None, validate_only=False):
         new_topics = NewTopic(name=new_topics, num_partitions=1, replication_factor=1)
         return self.admin.create_topics([new_topics], timeout_ms, validate_only)
-        # log.info("Topic Created")
 
     def get_all_topics(self):
         all_topics = self.admin.list_topics()
