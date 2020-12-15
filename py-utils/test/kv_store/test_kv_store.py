@@ -22,7 +22,7 @@ import sys
 import unittest
 import yaml, json, toml, configparser
 
-from cortx.utils.kv_store.kv_store_factory import KvStoreFactory
+from cortx.utils.kv_store.kv_store import KvStoreFactory
 from cortx.utils.schema.payload import Json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
