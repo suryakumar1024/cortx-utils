@@ -66,7 +66,7 @@ class TestConfStore(unittest.TestCase):
         Test by getting the chained key(key1.key2.key3) from the loaded config
         """
         load_config('test_local', 'json:///tmp/file1.json')
-        result_data = conf_store.get('test_local', 'bridge.name',
+        result_data = conf_store.get('test_local', 'bridge>name',
                                      default_val=None)
         self.assertEqual(result_data, 'Homebridge')
 
@@ -110,8 +110,8 @@ class TestConfStore(unittest.TestCase):
         conf_store.load('backup', f"{conf_file}.bak")
         conf_store.copy('csm_local', 'backup')
         conf_store.save('backup')
-        result_data = conf_store.get_keys('backup')
-        self.assertTrue(True if len(result_data) > 1 else False)
+        result_data = conf_store.get_data('backup')
+        self.assertTrue(True if 'bridge' in result_data else False)
 
 
 if __name__ == '__main__':
