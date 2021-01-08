@@ -1,4 +1,4 @@
-#!/bin/python3
+#!/bin/python3 
 
 # CORTX Python common library.
 # Copyright (c) 2020 Seagate Technology LLC and/or its Affiliates
@@ -16,13 +16,11 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import errno
-import inspect
-from urllib.parse import urlparse
-
+import re
 from cortx.utils.kv_store.error import KvStoreError
 
-class KvData:
-    """ Base class to represent in memory config data """
+class KvPayload:
+    """ Dict based in memory representation of Key Value data """
 
     def __init__(self, data, delim='>'):
         """
@@ -61,24 +59,12 @@ class KvData:
         else:
             raise KvStoreError(errno.ENOSYS, "Cant handle type %s", type(data))
 
-
-class DictKvData(KvData):
-    """ Dict based in memory representation of conf data """
-
-    def __init__(self, data: dict, delim='>'):
-        """
-        Args:
-        data: Dictionary representing keys (hierarchical) and values
-        delim: It is used to split key into hierarchy, e.g. "k1>2" or "k1.k2"
-        """
-        super(DictKvData, self).__init__(data, delim)
-
     def _set(self, key: str, val: str, data: dict):
         k = key.split(self._delim, 1)
 
         # Check if key has index, if so identify index
         index = None
-        ki = re.split(r'\[([0-9]+)\]', k[0])
+        ki = re.split(r'\W+', k[0])
         if len(ki) > 1:
             if len(ki[0].strip()) == 0:
                 raise KvStoreError(errno.EINVAL, "Invalid key name %s", ki[0])
@@ -120,10 +106,12 @@ class DictKvData(KvData):
 
     def _get(self, key: str, data: dict) -> str:
         k = key.split(self._delim, 1)
+
         # Check if key has index, if so identify index
         index = None
-        ki = re.split(r'\[([0-9]+)\]', k[0])
+        ki = re.split(r'\W+', k[0])
         if len(ki) > 1:
+            print("### ", ki)
             if len(ki[0].strip()) == 0:
                 raise KvStoreError(errno.EINVAL, "Invalid key %s", ki[0])
 
@@ -180,97 +168,3 @@ class DictKvData(KvData):
     def delete(self, key):
         """ Deletes given set of keys from the dictionary """
         return self._delete(key, self._data)
-
-
-class KvStore:
-    """ Abstraction over all kinds of KV based Storage """
-
-    def __init__(self, store_loc, store_path, delim='>'):
-        """
-        Args:
-        store_loc: store location
-        store_path: store path from where to load data
-        delim: It is used to split key into hierarchy, e.g. "k1>2" or "k1.k2"
-        """
-        self._store_loc = store_loc
-        self._store_path = store_path
-        self._delim = delim
-
-    @property
-    def path(self):
-        return self._store_path
-
-    @property
-    def loc(self):
-        return self._store_loc
-
-    @property
-    def delim(self):
-        return self._delim
-
-    def get(self, keys: list) -> list:
-        """ Obtains values of keys. Return list of values. """
-        payload = self.load()
-        vals = []
-        for key in keys:
-            vals.append(payload.get(key))
-        return vals
-
-    def set(self, keys: list, vals: list):
-        """ Updates a given set of keys and values """
-        if len(keys) != len(vals):
-            raise KvStoreError(errno.EINVAL, f"Mismatched keys & values %s:%s",\
-                keys, vals)
-        payload = self.load()
-        for key, val in zip(keys, vals):
-            payload.set(key, val)
-        self.dump(payload)
-
-    def delete(self, keys: list):
-        """ Deletes given set of keys from the store """
-        payload = self.load()
-        for key in keys:
-            payload.delete(key)
-        self.dump(payload)
-
-    def load(self, delim='>'):
-        """ Loads and returns data from KV storage """
-        raise KvStoreError(errno.ENOSYS, f"%s:load() not implemented", \
-            type(self).__name__)
-
-    def dump(self, payload, delim='>'):
-        """ Dumps data onto the KV Storage """
-        raise KvStoreError(errno.ENOSYS, f"%s:dump() not implemented", \
-            type(self).__name__)
-
-
-class KvStoreFactory:
-    """ Factory class for File based KV Store """
-
-    _stores = {}
-
-    def __init__(self):
-        """ Initializing KvStoreFactory """
-        pass
-
-    @staticmethod
-    def get_instance(store_url: str, delim='>') -> KvStore:
-        """ Obtain instance of KvStore for given file_type """
-
-        url_spec = urlparse(store_url)
-        store_type = url_spec.scheme
-        store_loc = url_spec.netloc
-        store_path = url_spec.path
-
-        if store_url in KvStoreFactory._stores.keys():
-            return KvStoreFactory._stores[store_url]
-
-        from cortx.utils.kv_store import kv_store_collection
-        storage = inspect.getmembers(kv_store_collection, inspect.isclass)
-        for name, cls in storage:
-            if hasattr(cls, 'name') and store_type == cls.name:
-                KvStoreFactory._stores[store_url] = cls(store_loc, store_path,
-                                                        delim)
-                return KvStoreFactory._stores[store_url]
-
-        raise KvStoreError(errno.EINVAL, f"Invalid store type %s", store_type)
