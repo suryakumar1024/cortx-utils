@@ -81,4 +81,3 @@ class Formatter:
             raise FormatError(errno.EINVAL, "Invalid format type %s", format_type)
 
         return Formatter._formats[format_type].dump(data)
-
