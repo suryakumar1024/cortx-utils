@@ -21,7 +21,7 @@ import inspect
 import json
 import yaml
 import toml
-
+import re
 
 class FormatError(Exception):
     """ Generic Exception with error code and output """
@@ -36,17 +36,8 @@ class FormatError(Exception):
 
 
 class Format:
-    """ Facilitates Format of dictionary as per defined format type """
-
-    @staticmethod
-    def dump(data: dict, format_type: str) -> str:
-        members = inspect.getmembers(sys.modules[__name__])
-        for name, cls in members:
-            if name != "Format" and name.endswith("Format"):
-                if cls.name == format_type:
-                    return cls._dump(data)
-
-        raise FormatError(errno.EINVAL, "Invalid format type %s", format_type)
+    """ Represents a format converter """
+    pass
 
 
 class JsonFormat(Format):
@@ -74,3 +65,26 @@ class TomlFormat(Format):
     @staticmethod
     def _dump(data: dict) -> str:
         return toml.dumps(data)
+
+
+class Formatter:
+    _formats = {}
+
+    def dump(data: dict, format_type) -> str:
+        if format_type not in Formatter._formats.keys():
+            members = inspect.getmembers(sys.modules[__name__])
+            for name, cls in members:
+                if name == "Format" or not name.endswith("Format"):
+                    continue
+                if cls.name == format_type:
+                    Formatter._formats[format_type] = cls()
+
+        if format_type not in Formatter._formats.keys():
+            raise FormatError(errno.EINVAL, "Invalid format type %s", format_type)
+
+        return Formatter._formats[format_type].dump(data)
+
+
+if __name__ == "__main__":
+    str = Formatter.dump({"k1": "v1"}, "json")
+    print(str)
