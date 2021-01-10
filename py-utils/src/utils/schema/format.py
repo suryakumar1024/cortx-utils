@@ -16,12 +16,13 @@
 # please email opensource@seagate.com or cortx-questions@seagate.com.
 
 import errno
+import re
 import sys
 import inspect
 import json
 import yaml
 import toml
-import re
+
 
 class FormatError(Exception):
     """ Generic Exception with error code and output """
@@ -44,8 +45,7 @@ class JsonFormat(Format):
     """ Json Format Handler """
     name = "json"
 
-    @staticmethod
-    def _dump(data: dict) -> str:
+    def dump(self, data: dict) -> str:
         return json.dumps(data)
 
 
@@ -53,8 +53,7 @@ class YamlFormat(Format):
     """ YAML Format Handler """
     name = "yaml"
 
-    @staticmethod
-    def _dump(data: dict) -> str:
+    def dump(self, data: dict) -> str:
         return yaml.dump(data)
 
 
@@ -62,8 +61,7 @@ class TomlFormat(Format):
     """ YAML Format Handler """
     name = "toml"
 
-    @staticmethod
-    def _dump(data: dict) -> str:
+    def dump(self, data: dict) -> str:
         return toml.dumps(data)
 
 
