@@ -82,7 +82,3 @@ class Formatter:
 
         return Formatter._formats[format_type].dump(data)
 
-
-if __name__ == "__main__":
-    str = Formatter.dump({"k1": "v1"}, "json")
-    print(str)
