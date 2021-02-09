@@ -215,16 +215,24 @@ class TextKvStore(KvStore):
         with open(self._store_path, 'w') as f:
             f.write(data.get_data())
 
+class PillarKvPayload(KvPayload):
+    """ In memory representation of pillar data """
+    def __init__(self, data, delim='>'):
+        super().__init__(data, delim)
+    
+    def set(self, key, val):
+        k = key.split('>', 1)
+        if len(k) <= 1:
+            raise KvError(errno.EINVAL, "Missing section in key %s", \
+                key)
 
-class PillarStore(KvStore):
-    """ Salt Pillar based KV Store """
-    name = "salt"
-
-    def __init__(self, store_loc, store_path, delim='>'):
-        KvStore.__init__(self, store_loc, store_path, delim)
+        self._data[k[0]][k[1]] = val
+        if key not in self._keys:
+            self._keys.append(key)
 
     def get(self, key):
         """Get pillar data for key."""
+        key = key.replace(self._delim, '/')
         cmd = f"salt-call pillar.get {key} --out=json"
         cmd_proc = SimpleProcess(cmd)
         out, err, rc = cmd_proc.run()
@@ -246,10 +254,29 @@ class PillarStore(KvStore):
                                         f"Key not present")
         return res
 
-    def set(self, key, value):
-        # TODO: Implement
-        pass
-
     def delete(self, key):
-        # TODO: Implement
-        pass
+        k = key.split('>', 1)
+        if len(k) == 1:
+            self._data.remove_section(k[0])
+        elif len(k) == 2:
+            self._data.remove_option(k[0], k[1])
+        if key in self._keys: self._keys.remove(key)
+
+class PillarKvStore(KvStore):
+    """ Salt Pillar based KV Store """
+    name = "pillar"
+
+    def __init__(self, store_loc, store_path, delim='>'):
+        KvStore.__init__(self, store_loc, store_path, delim)
+    
+    def load(self) -> KvPayload:
+        """ Loads data from pillar store """
+        # cmd = f"provisioner pillar_get --output=json"
+        cmd = f"salt-call pillar.items --out=json"
+        cmd_proc = SimpleProcess(cmd)
+        out, err, rc = cmd_proc.run()
+        try:
+            res = json.loads(out)
+        except Exception as ex:
+            raise KvError(errno.ENOENT, f"Cant get data for %s. %s.", key, ex)
+        return PillarKvPayload(res, self._delim)
