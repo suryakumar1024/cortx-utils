@@ -20,7 +20,6 @@ import errno
 from cortx.utils.conf_store.error import ConfError
 from cortx.utils.conf_store.conf_cache import ConfCache
 from cortx.utils.kv_store.kv_store import KvStoreFactory
-from cortx.utils import errors
 
 
 class ConfStore:
@@ -42,6 +41,11 @@ class ConfStore:
     @property
     def machine_id(self):
         return self._machine_id
+
+    def set_delim(self, delim='>'):
+        if len(delim) > 1 or delim not in [':', '>', '.', '|', ';', '/']:
+            raise ConfError(errno.EINVAL, "invalid delim %s", delim)
+        self._delim = delim
 
     def _get_machine_id(self):
         """ Returns the machine id from /etc/machine-id """
@@ -188,38 +192,6 @@ class ConfStore:
         for key in key_list:
             self._cache[dst_index].set(key, self._cache[src_index].get(key))
 
-    def merge(self, dest_index: str, src_index: str, keys: list = None):
-        """
-        Merges the content of src_index and dest_index file
-
-        Parameters:
-        dst_index - Destination Index, to this index resulted values will be
-            merged
-        src_index - Source Index, From which new keys (and related values) are
-            picked up for merging
-        keys - optional parameter, Only these keys (and related values) from
-            src_index will be merged.
-        """
-        if src_index not in self._cache.keys():
-            raise ConfError(errors.ERR_NOT_INITIALIZED, "config index %s is "\
-                "not loaded", src_index)
-        if dest_index not in self._cache.keys():
-            raise ConfError(errors.ERR_NOT_INITIALIZED, "config index %s is "\
-                "not loaded", dest_index)
-        if keys is None:
-            keys = self._cache[src_index].get_keys()
-        else:
-            for key in keys:
-                if not self._cache[src_index].get(key):
-                    raise ConfError(errno.ENOENT, "%s is not present in %s", \
-                        key, src_index)
-        self._merge(dest_index, src_index, keys)
-
-    def _merge(self, dest_index, src_index, keys):
-        for key in keys:
-            if key not in self._cache[dest_index].get_keys():
-                self._cache[dest_index].set(key, self._cache[src_index].get(key))
-
 
 class Conf:
     """ Singleton class instance based on conf_store """
@@ -235,6 +207,15 @@ class Conf:
                 setattr(Conf, f"_{key}", val)
             Conf._conf = ConfStore(delim=Conf._delim)
             Conf._machine_id = Conf._conf.machine_id
+        # else:
+        #     for key, val in kwargs.items():
+        #         setattr(Conf, f"_{key}", val)
+        #     Conf._conf.set_delim(delim=Conf._delim)
+    
+    @staticmethod
+    def set_delim(delim=">"):
+        """ set/ reassign delim value """
+        Conf._conf.set_delim(delim=Conf._delim)
 
     @staticmethod
     def load(index: str, url: str, **kwargs):
@@ -268,10 +249,6 @@ class Conf:
         """ Creates a Copy suffixed file for main file"""
         Conf._conf.copy(src_index, dst_index, key_list)
         Conf._conf.save(dst_index)
-
-    @staticmethod
-    def merge(dest_index: str, src_index: str, keys: list = None):
-        Conf._conf.merge(dest_index, src_index, keys)
 
     class ClassProperty(property):
         """ Subclass property for classmethod properties """
